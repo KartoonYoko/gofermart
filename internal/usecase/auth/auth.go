@@ -14,7 +14,7 @@ type authUsecase struct {
 }
 
 type authRepository interface {
-	CreateUser(login string, password string) error
+	AddUser(login string, password string) error
 }
 
 // Register регистрирует пользователя
@@ -27,7 +27,7 @@ func (uc *authUsecase) RegisterAndGetUserJWT(login string, password string) erro
 		return ErrWrongDataFormat
 	}
 
-	err := uc.repo.CreateUser(login, password)
+	err := uc.repo.AddUser(login, password)
 	if err != nil {
 		// TODO проверить на ошибку существования пользователя
 		return err

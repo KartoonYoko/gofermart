@@ -1,3 +1,7 @@
 package main
 
-func main() {}
+import "gofermart/internal/app"
+
+func main() {
+	app.Run()
+}
