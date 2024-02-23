@@ -2,7 +2,11 @@ package auth
 
 import (
 	"context"
+	"errors"
+	model "gofermart/internal/model/auth"
 
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -19,6 +23,9 @@ func New(ctx context.Context, db *sqlx.DB) (*authRepository, error) {
 }
 
 // AddUser добавит пользователя и вернёт его ID
+// 
+// Может вернуть следующие ошибки:
+// 	- ErrLoginAlreadyExists - логин уже занят
 func (r *authRepository) AddUser(ctx context.Context, login string, password string) (int64, error) {
 	query := `
 		INSERT INTO users (login, password, loyality_balance_current, loyality_balance_withdrawn)
@@ -27,6 +34,11 @@ func (r *authRepository) AddUser(ctx context.Context, login string, password str
 	`
 	res, err := r.conn.ExecContext(ctx, query, login, password)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		// если такой пользователь уже существует
+		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
+			return -1, NewErrLoginAlreadyExists(login, err)
+		}
 		return -1, err
 	}
 
@@ -36,4 +48,24 @@ func (r *authRepository) AddUser(ctx context.Context, login string, password str
 	}
 
 	return id, nil
+}
+
+// GetUserByLoginAndPassword вернёт информацию о пользователе по совпадению его логина и пароля
+// 
+// Может вернуть следующие ошибки:
+// 	- ErrUserNotFound - пользователь не найден
+func (r *authRepository) GetUserByLoginAndPassword(ctx context.Context, login string, password string) (*model.GetUserByLoginAndPasswordModel, error) {
+	query := `
+	SELECT * FROM users 
+	WHERE id=$1 AND password=$2
+	`
+	
+	user := model.GetUserByLoginAndPasswordModel{}
+	err := r.conn.GetContext(ctx, &user, query, login, password)
+	// TODO уведомить если пользователь не найден
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }

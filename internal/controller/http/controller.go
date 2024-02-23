@@ -17,6 +17,12 @@ import (
 type HttpController struct {
 	r    *chi.Mux
 	conf *config.Config
+	uc   authUsercase
+}
+
+type authUsercase interface {
+	RegisterAndGetUserJWT(ctx context.Context, login string, password string) (string, error)
+	Login(ctx context.Context, login string, password string) (string, error)
 }
 
 func New(conf *config.Config) *HttpController {
@@ -51,7 +57,7 @@ func (c *HttpController) routeUser() *chi.Mux {
 
 	// конечные точки для аутентифицированных пользователей
 	userRouter.Group(func(r chi.Router) {
-		// TODO добавить middleware футентификации
+		// TODO добавить middleware aутентификации
 		userRouter.Post("/orders", c.handlerUserOrdersPOST)
 		userRouter.Get("/orders", c.handlerUserOrdersGET)
 

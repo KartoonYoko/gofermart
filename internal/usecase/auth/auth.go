@@ -1,7 +1,11 @@
 package auth
 
 import (
+	"context"
 	"gofermart/config"
+	model "gofermart/internal/model/auth"
+	repoAuth "gofermart/internal/repository/pgsql/auth"
+	"strconv"
 
 	"errors"
 
@@ -9,39 +13,81 @@ import (
 )
 
 type authUsecase struct {
-	conf *config.JWTConfig
-	repo authRepository
+	confJWT  *config.JWTConfig
+	confAuth *config.AuthConfig
+
+	repo     AuthRepository
+	passwordHasher PasswordHasher
 }
 
-type authRepository interface {
-	AddUser(login string, password string) error
+type AuthRepository interface {
+	AddUser(ctx context.Context, login string, password string) (int64, error)
+	GetUserByLoginAndPassword(ctx context.Context, login string, password string) (*model.GetUserByLoginAndPasswordModel, error)
+}
+
+type PasswordHasher interface {
+	Hash(password string) (string, error)
+}
+
+func New(confJWT *config.JWTConfig, confAuth *config.AuthConfig, repo AuthRepository, passwordHasher PasswordHasher) (*authUsecase, error) {
+	uc := &authUsecase{
+		confJWT:        confJWT,
+		confAuth:       confAuth,
+		repo:           repo,
+		passwordHasher: passwordHasher,
+	}
+
+	return uc, nil
 }
 
 // Register регистрирует пользователя
 //
-// При валидации может вернуть следующие ошибки:
+// Может вернуть следующие ошибки:
 //   - ErrLoginIsOccupiedByAnotherUser логин уже занят
 //   - ErrWrongDataFormat неверный формат данных
-func (uc *authUsecase) RegisterAndGetUserJWT(login string, password string) error {
+func (uc *authUsecase) RegisterAndGetUserJWT(ctx context.Context, login string, password string) (string, error) {
 	if login == "" || password == "" {
-		return ErrWrongDataFormat
+		return "", model.ErrWrongDataFormat
 	}
 
-	err := uc.repo.AddUser(login, password)
+	hashPswd, err := uc.passwordHasher.Hash(password)
 	if err != nil {
-		// TODO проверить на ошибку существования пользователя
-		return err
+		return "", err
 	}
 
-	return errors.New("not implemented")
+	userID, err := uc.repo.AddUser(ctx, login, hashPswd)
+	if err != nil {
+		var errLoginAlreadyExists *repoAuth.ErrLoginAlreadyExists
+		if errors.As(err, &errLoginAlreadyExists) {
+			return "", model.ErrLoginIsOccupiedByAnotherUser
+		}
+		return "", err
+	}
+
+	return uc.buildJWTStringWithUserID(userID)
 }
 
 func (uc *authUsecase) ValidateJWT() error {
 	return errors.New("not implemented")
 }
 
-func (uc *authUsecase) Login() error {
-	return errors.New("not implemented")
+func (uc *authUsecase) Login(ctx context.Context, login string, password string) (string, error) {
+	hashPswd, err := uc.passwordHasher.Hash(password)
+	if err != nil {
+		return "", err
+	}
+
+	user, err := uc.repo.GetUserByLoginAndPassword(ctx, login, hashPswd)
+	if err != nil {
+		var errUserNotFound *repoAuth.ErrUserNotFound
+		if errors.As(err, &errUserNotFound) {
+			return "", model.ErrUserNotFound
+		}
+
+		return "", err
+	}
+
+	return uc.buildJWTStringWithUserID(user.ID)
 }
 
 // Claims — структура утверждений, которая включает стандартные утверждения
@@ -52,14 +98,14 @@ type Claims struct {
 }
 
 // buildJWTString создаёт токен и возвращает его в виде строки.
-func (uc *authUsecase) buildJWTString(userID string) (string, error) {
+func (uc *authUsecase) buildJWTStringWithUserID(userID int64) (string, error) {
 	// создаём новый токен с алгоритмом подписи HS256 и утверждениями — Claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
-		UserID: userID,
+		UserID: strconv.FormatInt(userID, 10),
 	})
 
 	// создаём строку токена
-	tokenString, err := token.SignedString([]byte(uc.conf.SecretJWTKey))
+	tokenString, err := token.SignedString([]byte(uc.confJWT.SecretJWTKey))
 	if err != nil {
 		return "", err
 	}

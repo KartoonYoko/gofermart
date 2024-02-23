@@ -29,24 +29,26 @@ func (in *initializer) Init(ctx context.Context) error {
 	// TODO посмотреть monetary types для posgresql
 
 	_, err = tx.ExecContext(ctx, `
-	CREATE TABLE "users" (
+	CREATE TABLE IF NOT EXISTS "users" (
 		"id" SERIAL PRIMARY KEY,
-		"login" varchar,
-		"password" varchar,
-		"loyality_balance_current" integer,
-		"loyality_balance_withdrawn" integer
+		"login" VARCHAR,
+		"password" VARCHAR,
+		"loyality_balance_current" INTEGER,
+		"loyality_balance_withdrawn" INTEGER
 	);
+
+	CREATE UNIQUE INDEX IF NOT EXISTS idx_users_login ON users(login);
 	`)
 	if err != nil {
 		return err
 	}
 
 	_, err = tx.ExecContext(ctx, `
-	CREATE TABLE "orders" (
-		"id" integer PRIMARY KEY,
-		"status" varchar,
-		"accrual" integer,
-		"user_id" integer,
+	CREATE TABLE IF NOT EXISTS "orders" (
+		"id" INTEGER PRIMARY KEY,
+		"status" VARCHAR,
+		"accrual" INTEGER,
+		"user_id" INTEGER,
 
 		CONSTRAINT fk_user_id
 		FOREIGN KEY (user_id) 
@@ -59,11 +61,11 @@ func (in *initializer) Init(ctx context.Context) error {
 	}
 
 	_, err = tx.ExecContext(ctx, `
-	CREATE TABLE "loayality_points_withdrawals" (
-		"order_id" integer PRIMARY KEY,
-		"user_id" integer,
+	CREATE TABLE IF NOT EXISTS "loayality_points_withdrawals" (
+		"order_id" INTEGER PRIMARY KEY,
+		"user_id" INTEGER,
 		"processed_at" TIMESTAMP,
-		"sum" integer,
+		"sum" INTEGER,
 
 		CONSTRAINT fk_user_id
 		FOREIGN KEY (user_id) 
