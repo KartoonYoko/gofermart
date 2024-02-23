@@ -16,7 +16,7 @@ import (
 //	400 — неверный формат запроса;
 //	409 — логин уже занят;
 //	500 — внутренняя ошибка сервера.
-func (c *HttpController) handlerUserRegisterPOST(w http.ResponseWriter, r *http.Request) {
+func (c *HTTPController) handlerUserRegisterPOST(w http.ResponseWriter, r *http.Request) {
 	type RegisterModel struct {
 		Login    string `json:"login"`
 		Password string `json:"password"`
@@ -56,7 +56,7 @@ func (c *HttpController) handlerUserRegisterPOST(w http.ResponseWriter, r *http.
 //	400 — неверный формат запроса;
 //	401 — неверная пара логин/пароль;
 //	500 — внутренняя ошибка сервера.
-func (c *HttpController) handlerUserLoginPOST(w http.ResponseWriter, r *http.Request) {
+func (c *HTTPController) handlerUserLoginPOST(w http.ResponseWriter, r *http.Request) {
 	type LoginModel struct {
 		Login    string `json:"login"`
 		Password string `json:"password"`

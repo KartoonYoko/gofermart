@@ -3,7 +3,7 @@ package httpserver
 import "net/http"
 
 // загрузка пользователем номера заказа для расчёта;
-func (c *HttpController) handlerUserOrdersPOST(w http.ResponseWriter, r *http.Request) {
+func (c *HTTPController) handlerUserOrdersPOST(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	// ctxUserID := ctx.Value(keyUserID)
 	// var request model.CreateShortenURLRequest
@@ -19,7 +19,7 @@ func (c *HttpController) handlerUserOrdersPOST(w http.ResponseWriter, r *http.Re
 }
 
 // получение списка загруженных пользователем номеров заказов, статусов их обработки и информации о начислениях;
-func (c *HttpController) handlerUserOrdersGET(w http.ResponseWriter, r *http.Request) {
+func (c *HTTPController) handlerUserOrdersGET(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	// var request model.CreateShortenURLRequest
 	// if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -30,7 +30,7 @@ func (c *HttpController) handlerUserOrdersGET(w http.ResponseWriter, r *http.Req
 }
 
 // получение текущего баланса счёта баллов лояльности пользователя;
-func (c *HttpController) handlerUserBalanceGET(w http.ResponseWriter, r *http.Request) {
+func (c *HTTPController) handlerUserBalanceGET(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	// var request model.CreateShortenURLRequest
 	// if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -41,7 +41,7 @@ func (c *HttpController) handlerUserBalanceGET(w http.ResponseWriter, r *http.Re
 }
 
 // запрос на списание баллов с накопительного счёта в счёт оплаты нового заказа;
-func (c *HttpController) handlerUserBalanceWithdrawPOST(w http.ResponseWriter, r *http.Request) {
+func (c *HTTPController) handlerUserBalanceWithdrawPOST(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	// var request model.CreateShortenURLRequest
 	// if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -56,7 +56,7 @@ func (c *HttpController) handlerUserBalanceWithdrawPOST(w http.ResponseWriter, r
 }
 
 // получение информации о выводе средств с накопительного счёта пользователем
-func (c *HttpController) handlerUserWithdrawalsGET(w http.ResponseWriter, r *http.Request) {
+func (c *HTTPController) handlerUserWithdrawalsGET(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	// var request model.CreateShortenURLRequest
 	// if err := json.NewDecoder(r.Body).Decode(&request); err != nil {

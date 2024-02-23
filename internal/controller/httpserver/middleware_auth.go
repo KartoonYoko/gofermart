@@ -12,7 +12,7 @@ import (
 )
 
 // middlewareAuth проверяет наличие куки "Authorization", валидирует находящийся там JWT токен
-func (c *HttpController) middlewareAuth(next http.Handler) http.Handler {
+func (c *HTTPController) middlewareAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var userID model.UserID
 		cookie, err := r.Cookie("Authorization")

@@ -15,7 +15,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-type HttpController struct {
+type HTTPController struct {
 	r    *chi.Mux
 	conf *config.Config
 	uc   authUsercase
@@ -27,8 +27,8 @@ type authUsercase interface {
 	ValidateJWTAndGetUserID(tokenString string) (model.UserID, error)
 }
 
-func New(conf *config.Config, uc authUsercase) *HttpController {
-	c := &HttpController{
+func New(conf *config.Config, uc authUsercase) *HTTPController {
+	c := &HTTPController{
 		conf: conf,
 		uc:   uc,
 	}
@@ -44,12 +44,12 @@ func New(conf *config.Config, uc authUsercase) *HttpController {
 	return c
 }
 
-func (c *HttpController) routeAPI() {
+func (c *HTTPController) routeAPI() {
 	userRoute := c.routeUser()
 	c.r.Mount("/api/user", userRoute)
 }
 
-func (c *HttpController) routeUser() *chi.Mux {
+func (c *HTTPController) routeUser() *chi.Mux {
 	userRouter := chi.NewRouter()
 
 	// общедоступные конечные точки
@@ -74,7 +74,7 @@ func (c *HttpController) routeUser() *chi.Mux {
 	return userRouter
 }
 
-func (c *HttpController) Serve(ctx context.Context) {
+func (c *HTTPController) Serve(ctx context.Context) {
 	server := &http.Server{Addr: c.conf.RunAddress, Handler: c.r}
 
 	// Server run context
