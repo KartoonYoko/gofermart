@@ -1,10 +1,11 @@
-package http
+package httpserver
 
 import "net/http"
 
 // загрузка пользователем номера заказа для расчёта;
 func (c *HttpController) handlerUserOrdersPOST(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
+	// ctxUserID := ctx.Value(keyUserID)
 	// var request model.CreateShortenURLRequest
 	// if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 	// 	http.Error(w, "Can not parse body", http.StatusBadRequest)

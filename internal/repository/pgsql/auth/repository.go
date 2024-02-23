@@ -27,7 +27,7 @@ func New(ctx context.Context, db *sqlx.DB) (*authRepository, error) {
 //
 // Может вернуть следующие ошибки:
 //   - ErrLoginAlreadyExists - логин уже занят
-func (r *authRepository) AddUser(ctx context.Context, login string, password string) (int64, error) {
+func (r *authRepository) AddUser(ctx context.Context, login string, password string) (model.UserID, error) {
 	query := `
 		INSERT INTO users (login, password, loyality_balance_current, loyality_balance_withdrawn)
 		VALUES ($1, $2, 0, 0)
@@ -48,7 +48,7 @@ func (r *authRepository) AddUser(ctx context.Context, login string, password str
 		return -1, err
 	}
 
-	return id, nil
+	return model.UserID(id), nil
 }
 
 // GetUserByLoginAndPassword вернёт информацию о пользователе по совпадению его логина и пароля

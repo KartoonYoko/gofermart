@@ -2,11 +2,11 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"gofermart/config"
 	"gofermart/internal/logger"
 	model "gofermart/internal/model/auth"
 	repoAuth "gofermart/internal/repository/pgsql/auth"
-	"strconv"
 
 	"errors"
 
@@ -23,7 +23,7 @@ type authUsecase struct {
 }
 
 type AuthRepository interface {
-	AddUser(ctx context.Context, login string, password string) (int64, error)
+	AddUser(ctx context.Context, login string, password string) (model.UserID, error)
 	GetUserByLoginAndPassword(ctx context.Context, login string, password string) (*model.GetUserByLoginAndPasswordModel, error)
 }
 
@@ -72,7 +72,7 @@ func (uc *authUsecase) RegisterAndGetUserJWT(ctx context.Context, login string, 
 			)
 			return "", model.ErrLoginIsOccupiedByAnotherUser
 		}
-		
+
 		logger.Log.Error("register:", zap.Error(err))
 		return "", err
 	}
@@ -80,14 +80,11 @@ func (uc *authUsecase) RegisterAndGetUserJWT(ctx context.Context, login string, 
 	return uc.buildJWTStringWithUserID(userID)
 }
 
-func (uc *authUsecase) ValidateJWT() error {
-	return errors.New("not implemented")
-}
-
 // LoginAndGetUserJWT ищёт пользователя по логину и паролю и если находит - возвращает JWT токен, принадлежащий пользователю
-// 
+//
 // Может вернуть следующие ошибки:
-// 	errUserNotFound - пользователь не найден
+//
+//	errUserNotFound - пользователь не найден
 func (uc *authUsecase) LoginAndGetUserJWT(ctx context.Context, login string, password string) (string, error) {
 	hashPswd, err := uc.passwordHasher.Hash(password)
 	if err != nil {
@@ -109,18 +106,32 @@ func (uc *authUsecase) LoginAndGetUserJWT(ctx context.Context, login string, pas
 	return uc.buildJWTStringWithUserID(user.ID)
 }
 
-// Claims — структура утверждений, которая включает стандартные утверждения
-// и одно пользовательское — UserID
-type Claims struct {
-	jwt.RegisteredClaims
-	UserID string
+func (uc *authUsecase) ValidateJWTAndGetUserID(tokenString string) (model.UserID, error) {
+	claims := &model.Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims,
+		func(t *jwt.Token) (interface{}, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+			}
+			return []byte(uc.confJWT.SecretJWTKey), nil
+		})
+
+	if err != nil {
+		return -1, err
+	}
+
+	if !token.Valid {
+		return -1, fmt.Errorf("token is not valid")
+	}
+
+	return claims.UserID, nil
 }
 
 // buildJWTString создаёт токен и возвращает его в виде строки.
-func (uc *authUsecase) buildJWTStringWithUserID(userID int64) (string, error) {
+func (uc *authUsecase) buildJWTStringWithUserID(userID model.UserID) (string, error) {
 	// создаём новый токен с алгоритмом подписи HS256 и утверждениями — Claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
-		UserID: strconv.FormatInt(userID, 10),
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, model.Claims{
+		UserID: userID,
 	})
 
 	// создаём строку токена

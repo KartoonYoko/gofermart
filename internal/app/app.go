@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gofermart/config"
-	"gofermart/internal/controller/http"
+	"gofermart/internal/controller/httpserver"
 	"gofermart/internal/logger"
 	"gofermart/internal/repository/pgsql"
 	repoAuth "gofermart/internal/repository/pgsql/auth"
@@ -60,6 +60,6 @@ func Run() {
 	}
 
 	//
-	controller := http.New(conf, usecaseAuth)
+	controller := httpserver.New(conf, usecaseAuth)
 	controller.Serve()
 }

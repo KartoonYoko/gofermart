@@ -1,8 +1,9 @@
-package http
+package httpserver
 
 import (
 	"context"
 	"gofermart/config"
+	model "gofermart/internal/model/auth"
 	"log"
 	"net/http"
 	"os"
@@ -23,6 +24,7 @@ type HttpController struct {
 type authUsercase interface {
 	RegisterAndGetUserJWT(ctx context.Context, login string, password string) (string, error)
 	LoginAndGetUserJWT(ctx context.Context, login string, password string) (string, error)
+	ValidateJWTAndGetUserID(tokenString string) (model.UserID, error)
 }
 
 func New(conf *config.Config, uc authUsercase) *HttpController {
@@ -58,7 +60,8 @@ func (c *HttpController) routeUser() *chi.Mux {
 
 	// конечные точки для аутентифицированных пользователей
 	userRouter.Group(func(r chi.Router) {
-		// TODO добавить middleware aутентификации
+		r.Use(c.middlewareAuth)
+		
 		userRouter.Post("/orders", c.handlerUserOrdersPOST)
 		userRouter.Get("/orders", c.handlerUserOrdersGET)
 
