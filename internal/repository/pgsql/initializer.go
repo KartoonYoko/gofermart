@@ -25,9 +25,7 @@ func (in *initializer) Init(ctx context.Context) error {
 	}
 	defer tx.Rollback()
 
-	// вознаграждение начисляется и тратится в виртуальных баллах из расчёта 1 балл = 1 единица местной валюты.
-	// TODO посмотреть monetary types для posgresql
-
+	// таблица "Пользователи"
 	_, err = tx.ExecContext(ctx, `
 	CREATE TABLE IF NOT EXISTS "users" (
 		"id" SERIAL PRIMARY KEY,
@@ -43,6 +41,7 @@ func (in *initializer) Init(ctx context.Context) error {
 		return err
 	}
 
+	// таблица "Заказы"
 	_, err = tx.ExecContext(ctx, `
 	CREATE TABLE IF NOT EXISTS "orders" (
 		"id" INTEGER PRIMARY KEY,
@@ -60,8 +59,9 @@ func (in *initializer) Init(ctx context.Context) error {
 		return err
 	}
 
+	// таблица "Списания"
 	_, err = tx.ExecContext(ctx, `
-	CREATE TABLE IF NOT EXISTS "loayality_points_withdrawals" (
+	CREATE TABLE IF NOT EXISTS "withdrawals" (
 		"order_id" INTEGER PRIMARY KEY,
 		"user_id" INTEGER,
 		"processed_at" TIMESTAMP,
