@@ -8,15 +8,44 @@ import (
 	"net/http"
 )
 
-// регистрация пользователя
+// handlerUserRegisterPOST - регистрация пользователя
+//
+// Ответы:
+//
+//	200 — пользователь успешно зарегистрирован и аутентифицирован;
+//	400 — неверный формат запроса;
+//	409 — логин уже занят;
+//	500 — внутренняя ошибка сервера.
 func (c *HttpController) handlerUserRegisterPOST(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
-	// var request model.CreateShortenURLRequest
-	// if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-	// 	http.Error(w, "Can not parse body", http.StatusBadRequest)
-	// 	return
-	// }
-	w.WriteHeader(http.StatusInternalServerError)
+	type RegisterModel struct {
+		Login    string `json:"login"`
+		Password string `json:"password"`
+	}
+
+	ctx := r.Context()
+	var request RegisterModel
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Can not parse body", http.StatusBadRequest)
+		return
+	}
+
+	jwt, err := c.uc.RegisterAndGetUserJWT(ctx, request.Login, request.Password)
+	if err != nil {
+		if errors.Is(err, model.ErrWrongDataFormat) {
+			http.Error(w, "Wrong data format", http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, model.ErrLoginIsOccupiedByAnotherUser) {
+			http.Error(w, "Login is occupied", http.StatusConflict)
+			return
+		}
+
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	saveJWTAsAuthorizationCookie(w, jwt)
+	w.WriteHeader(http.StatusOK)
 }
 
 // handlerUserLoginPOST - аутентификация пользователя
@@ -40,7 +69,7 @@ func (c *HttpController) handlerUserLoginPOST(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	jwt, err := c.uc.Login(ctx, request.Login, request.Password)
+	jwt, err := c.uc.LoginAndGetUserJWT(ctx, request.Login, request.Password)
 	if err != nil {
 		if errors.Is(err, model.ErrUserNotFound) {
 			http.Error(w, "Wrong login or password", http.StatusUnauthorized)

@@ -84,7 +84,11 @@ func (uc *authUsecase) ValidateJWT() error {
 	return errors.New("not implemented")
 }
 
-func (uc *authUsecase) Login(ctx context.Context, login string, password string) (string, error) {
+// LoginAndGetUserJWT ищёт пользователя по логину и паролю и если находит - возвращает JWT токен, принадлежащий пользователю
+// 
+// Может вернуть следующие ошибки:
+// 	errUserNotFound - пользователь не найден
+func (uc *authUsecase) LoginAndGetUserJWT(ctx context.Context, login string, password string) (string, error) {
 	hashPswd, err := uc.passwordHasher.Hash(password)
 	if err != nil {
 		logger.Log.Error("login:", zap.Error(err))

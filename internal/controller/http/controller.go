@@ -22,13 +22,13 @@ type HttpController struct {
 
 type authUsercase interface {
 	RegisterAndGetUserJWT(ctx context.Context, login string, password string) (string, error)
-	Login(ctx context.Context, login string, password string) (string, error)
+	LoginAndGetUserJWT(ctx context.Context, login string, password string) (string, error)
 }
 
 func New(conf *config.Config, uc authUsercase) *HttpController {
 	c := &HttpController{
 		conf: conf,
-		uc: uc,
+		uc:   uc,
 	}
 	r := chi.NewRouter()
 	c.r = r
