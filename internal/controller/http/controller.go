@@ -25,9 +25,10 @@ type authUsercase interface {
 	Login(ctx context.Context, login string, password string) (string, error)
 }
 
-func New(conf *config.Config) *HttpController {
+func New(conf *config.Config, uc authUsercase) *HttpController {
 	c := &HttpController{
 		conf: conf,
+		uc: uc,
 	}
 	r := chi.NewRouter()
 	c.r = r

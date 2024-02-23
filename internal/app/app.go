@@ -5,6 +5,9 @@ import (
 	"gofermart/config"
 	"gofermart/internal/controller/http"
 	"gofermart/internal/repository/pgsql"
+	repoAuth "gofermart/internal/repository/pgsql/auth"
+	usecaseAuth "gofermart/internal/usecase/auth"
+	"gofermart/pkg/hash"
 	"log"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -13,8 +16,15 @@ import (
 
 func Run() {
 	ctx := context.TODO()
+	// конфигурация
 	conf := config.New()
+	confJWT, err := config.NewJWTConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	confAuth := config.NewAuthConfig("some sault")
 
+	// хранилище
 	db, err := sqlx.Connect("pgx", conf.DatabaseURL)
 	if err != nil {
 		log.Fatal(err)
@@ -27,7 +37,21 @@ func Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	repositoryAuth, err := repoAuth.New(ctx, db)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	controller := http.New(conf)
+	// хешер для паролей
+	hasher := hash.NewSHA1PasswordHasher(confAuth.Sault)
+
+	// usecases
+	usecaseAuth,err := usecaseAuth.New(confJWT, confAuth, repositoryAuth, hasher)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 
+	controller := http.New(conf, usecaseAuth)
 	controller.Serve()
 }
