@@ -61,7 +61,7 @@ func (c *HttpController) routeUser() *chi.Mux {
 	// конечные точки для аутентифицированных пользователей
 	userRouter.Group(func(r chi.Router) {
 		r.Use(c.middlewareAuth)
-		
+
 		userRouter.Post("/orders", c.handlerUserOrdersPOST)
 		userRouter.Get("/orders", c.handlerUserOrdersGET)
 
@@ -74,11 +74,11 @@ func (c *HttpController) routeUser() *chi.Mux {
 	return userRouter
 }
 
-func (c *HttpController) Serve() {
+func (c *HttpController) Serve(ctx context.Context) {
 	server := &http.Server{Addr: c.conf.RunAddress, Handler: c.r}
 
 	// Server run context
-	serverCtx, serverStopCtx := context.WithCancel(context.Background())
+	serverCtx, serverStopCtx := context.WithCancel(ctx)
 
 	// Listen for syscall signals for process to interrupt/quit
 	sig := make(chan os.Signal, 1)
@@ -87,7 +87,8 @@ func (c *HttpController) Serve() {
 		<-sig
 
 		// Shutdown signal with grace period of 30 seconds
-		shutdownCtx, _ := context.WithTimeout(serverCtx, 30*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(serverCtx, 30*time.Second)
+		defer cancel()
 
 		go func() {
 			<-shutdownCtx.Done()

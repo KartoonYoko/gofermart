@@ -33,18 +33,14 @@ func (r *authRepository) AddUser(ctx context.Context, login string, password str
 		VALUES ($1, $2, 0, 0)
 		RETURNING id
 	`
-	res, err := r.conn.ExecContext(ctx, query, login, password)
+	var id int
+	err := r.conn.QueryRowContext(ctx, query, login, password).Scan(&id)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		// если такой пользователь уже существует
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
 			return -1, NewErrLoginAlreadyExists(login, err)
 		}
-		return -1, err
-	}
-
-	id, err := res.LastInsertId()
-	if err != nil {
 		return -1, err
 	}
 

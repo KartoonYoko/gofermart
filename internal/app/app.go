@@ -61,5 +61,5 @@ func Run() {
 
 	//
 	controller := httpserver.New(conf, usecaseAuth)
-	controller.Serve()
+	controller.Serve(ctx)
 }
