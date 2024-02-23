@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"gofermart/config"
+	"gofermart/internal/logger"
 	model "gofermart/internal/model/auth"
 	repoAuth "gofermart/internal/repository/pgsql/auth"
 	"strconv"
@@ -10,13 +11,14 @@ import (
 	"errors"
 
 	"github.com/golang-jwt/jwt/v5"
+	"go.uber.org/zap"
 )
 
 type authUsecase struct {
 	confJWT  *config.JWTConfig
 	confAuth *config.AuthConfig
 
-	repo     AuthRepository
+	repo           AuthRepository
 	passwordHasher PasswordHasher
 }
 
@@ -47,11 +49,16 @@ func New(confJWT *config.JWTConfig, confAuth *config.AuthConfig, repo AuthReposi
 //   - ErrWrongDataFormat неверный формат данных
 func (uc *authUsecase) RegisterAndGetUserJWT(ctx context.Context, login string, password string) (string, error) {
 	if login == "" || password == "" {
+		logger.Log.Sugar().Infoln("register: wrong data format",
+			"login", login,
+			"password", password,
+		)
 		return "", model.ErrWrongDataFormat
 	}
 
 	hashPswd, err := uc.passwordHasher.Hash(password)
 	if err != nil {
+		logger.Log.Error("register:", zap.Error(err))
 		return "", err
 	}
 
@@ -59,8 +66,14 @@ func (uc *authUsecase) RegisterAndGetUserJWT(ctx context.Context, login string, 
 	if err != nil {
 		var errLoginAlreadyExists *repoAuth.ErrLoginAlreadyExists
 		if errors.As(err, &errLoginAlreadyExists) {
+			logger.Log.Sugar().Infoln("register: user already exists",
+				"login", login,
+				"password", password,
+			)
 			return "", model.ErrLoginIsOccupiedByAnotherUser
 		}
+		
+		logger.Log.Error("register:", zap.Error(err))
 		return "", err
 	}
 
@@ -74,6 +87,7 @@ func (uc *authUsecase) ValidateJWT() error {
 func (uc *authUsecase) Login(ctx context.Context, login string, password string) (string, error) {
 	hashPswd, err := uc.passwordHasher.Hash(password)
 	if err != nil {
+		logger.Log.Error("login:", zap.Error(err))
 		return "", err
 	}
 
@@ -84,6 +98,7 @@ func (uc *authUsecase) Login(ctx context.Context, login string, password string)
 			return "", model.ErrUserNotFound
 		}
 
+		logger.Log.Error("login:", zap.Error(err))
 		return "", err
 	}
 

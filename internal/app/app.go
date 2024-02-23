@@ -2,8 +2,10 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"gofermart/config"
 	"gofermart/internal/controller/http"
+	"gofermart/internal/logger"
 	"gofermart/internal/repository/pgsql"
 	repoAuth "gofermart/internal/repository/pgsql/auth"
 	usecaseAuth "gofermart/internal/usecase/auth"
@@ -16,6 +18,12 @@ import (
 
 func Run() {
 	ctx := context.TODO()
+	// логгер
+	if err := logger.Initialize("Info"); err != nil {
+		log.Fatal(fmt.Errorf("logger init error: %w", err))
+	}
+	defer logger.Log.Sync()
+
 	// конфигурация
 	conf := config.New()
 	confJWT, err := config.NewJWTConfig()
@@ -46,12 +54,12 @@ func Run() {
 	hasher := hash.NewSHA1PasswordHasher(confAuth.Sault)
 
 	// usecases
-	usecaseAuth,err := usecaseAuth.New(confJWT, confAuth, repositoryAuth, hasher)
+	usecaseAuth, err := usecaseAuth.New(confJWT, confAuth, repositoryAuth, hasher)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// 
+	//
 	controller := http.New(conf, usecaseAuth)
 	controller.Serve()
 }

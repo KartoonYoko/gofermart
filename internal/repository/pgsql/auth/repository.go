@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	model "gofermart/internal/model/auth"
 
@@ -23,9 +24,9 @@ func New(ctx context.Context, db *sqlx.DB) (*authRepository, error) {
 }
 
 // AddUser добавит пользователя и вернёт его ID
-// 
+//
 // Может вернуть следующие ошибки:
-// 	- ErrLoginAlreadyExists - логин уже занят
+//   - ErrLoginAlreadyExists - логин уже занят
 func (r *authRepository) AddUser(ctx context.Context, login string, password string) (int64, error) {
 	query := `
 		INSERT INTO users (login, password, loyality_balance_current, loyality_balance_withdrawn)
@@ -51,19 +52,21 @@ func (r *authRepository) AddUser(ctx context.Context, login string, password str
 }
 
 // GetUserByLoginAndPassword вернёт информацию о пользователе по совпадению его логина и пароля
-// 
+//
 // Может вернуть следующие ошибки:
-// 	- ErrUserNotFound - пользователь не найден
+//   - ErrUserNotFound - пользователь не найден
 func (r *authRepository) GetUserByLoginAndPassword(ctx context.Context, login string, password string) (*model.GetUserByLoginAndPasswordModel, error) {
 	query := `
-	SELECT * FROM users 
-	WHERE id=$1 AND password=$2
+	SELECT id, login, password FROM users 
+	WHERE login=$1 AND password=$2
 	`
-	
+
 	user := model.GetUserByLoginAndPasswordModel{}
 	err := r.conn.GetContext(ctx, &user, query, login, password)
-	// TODO уведомить если пользователь не найден
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, model.ErrUserNotFound
+		}
 		return nil, err
 	}
 

@@ -1,6 +1,9 @@
 package hash
 
-import "crypto/sha1"
+import (
+	"crypto/sha1"
+	"encoding/hex"
+)
 
 type SHA1PasswordHasher struct {
 	salt string
@@ -15,6 +18,8 @@ func (h *SHA1PasswordHasher) Hash(password string) (string, error) {
 	if _, err := hash.Write([]byte(password)); err != nil {
 		return "", err
 	}
-	
-	return string(hash.Sum([]byte(h.salt))), nil
+
+	hashedPswdBytes := hash.Sum([]byte(h.salt))
+	hashedPasswordHex := hex.EncodeToString(hashedPswdBytes)
+	return hashedPasswordHex, nil
 }

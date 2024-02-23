@@ -43,7 +43,7 @@ func (c *HttpController) handlerUserLoginPOST(w http.ResponseWriter, r *http.Req
 	jwt, err := c.uc.Login(ctx, request.Login, request.Password)
 	if err != nil {
 		if errors.Is(err, model.ErrUserNotFound) {
-			http.Error(w, "Can not parse body", http.StatusUnauthorized)
+			http.Error(w, "Wrong login or password", http.StatusUnauthorized)
 			return
 		}
 
