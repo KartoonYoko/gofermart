@@ -14,12 +14,12 @@ type orderRepository struct {
 	conn *sqlx.DB
 }
 
-func New(ctx context.Context, db *sqlx.DB) (*orderRepository, error) {
+func New(ctx context.Context, db *sqlx.DB) *orderRepository {
 	repo := &orderRepository{
 		conn: db,
 	}
 
-	return repo, nil
+	return repo
 }
 
 func (r *orderRepository) AddOrder(ctx context.Context, addModel *model.AddOrderModel) error {

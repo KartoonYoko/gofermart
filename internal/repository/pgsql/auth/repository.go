@@ -15,12 +15,12 @@ type authRepository struct {
 	conn *sqlx.DB
 }
 
-func New(ctx context.Context, db *sqlx.DB) (*authRepository, error) {
+func New(ctx context.Context, db *sqlx.DB) *authRepository {
 	repo := &authRepository{
 		conn: db,
 	}
 
-	return repo, nil
+	return repo
 }
 
 // AddUser добавит пользователя и вернёт его ID

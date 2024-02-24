@@ -36,14 +36,8 @@ func Run() {
 
 	// хранилище
 	db := initDB(ctx, *conf)
-	repositoryAuth, err := repoAuth.New(ctx, db)
-	if err != nil {
-		log.Fatal(err)
-	}
-	repoOrder, err := repoOrder.New(ctx, db)
-	if err != nil {
-		log.Fatal(err)
-	}
+	repositoryAuth := repoAuth.New(ctx, db)
+	repoOrder := repoOrder.New(ctx, db)
 
 	// хешер для паролей
 	hasher := hash.NewSHA1PasswordHasher(confAuth.Sault)
