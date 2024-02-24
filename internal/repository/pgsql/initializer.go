@@ -44,7 +44,7 @@ func (in *initializer) Init(ctx context.Context) error {
 	// таблица "Заказы"
 	_, err = tx.ExecContext(ctx, `
 	CREATE TABLE IF NOT EXISTS "orders" (
-		"id" INTEGER PRIMARY KEY,
+		"id" BIGINT PRIMARY KEY,
 		"status" VARCHAR,
 		"accrual" INTEGER,
 		"user_id" INTEGER,
@@ -62,7 +62,7 @@ func (in *initializer) Init(ctx context.Context) error {
 	// таблица "Списания"
 	_, err = tx.ExecContext(ctx, `
 	CREATE TABLE IF NOT EXISTS "withdrawals" (
-		"order_id" INTEGER PRIMARY KEY,
+		"order_id" BIGINT PRIMARY KEY,
 		"user_id" INTEGER,
 		"processed_at" TIMESTAMP,
 		"sum" INTEGER,

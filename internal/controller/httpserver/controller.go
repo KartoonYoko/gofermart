@@ -3,8 +3,7 @@ package httpserver
 import (
 	"context"
 	"gofermart/config"
-	"gofermart/internal/model/auth"
-	model "gofermart/internal/model/auth"
+	modelAuth "gofermart/internal/model/auth"
 	"log"
 	"net/http"
 	"os"
@@ -24,13 +23,13 @@ type HTTPController struct {
 }
 
 type usecaseOrder interface {
-	CreateNewOrder(ctx context.Context, userID auth.UserID, orderID int64) error
+	CreateNewOrder(ctx context.Context, userID modelAuth.UserID, orderID int64) error
 }
 
 type usecaseAuth interface {
 	RegisterAndGetUserJWT(ctx context.Context, login string, password string) (string, error)
 	LoginAndGetUserJWT(ctx context.Context, login string, password string) (string, error)
-	ValidateJWTAndGetUserID(tokenString string) (model.UserID, error)
+	ValidateJWTAndGetUserID(tokenString string) (modelAuth.UserID, error)
 }
 
 func New(conf *config.Config, ucAuth usecaseAuth, ucOrder usecaseOrder) *HTTPController {
@@ -61,21 +60,21 @@ func (c *HTTPController) routeUser() *chi.Mux {
 
 	// общедоступные конечные точки
 	userRouter.Group(func(r chi.Router) {
-		userRouter.Post("/register", c.handlerUserRegisterPOST)
-		userRouter.Post("/login", c.handlerUserLoginPOST)
+		r.Post("/register", c.handlerUserRegisterPOST)
+		r.Post("/login", c.handlerUserLoginPOST)
 	})
 
 	// конечные точки для аутентифицированных пользователей
 	userRouter.Group(func(r chi.Router) {
 		r.Use(c.middlewareAuth)
 
-		userRouter.Post("/orders", c.handlerUserOrdersPOST)
-		userRouter.Get("/orders", c.handlerUserOrdersGET)
+		r.Post("/orders", c.handlerUserOrdersPOST)
+		r.Get("/orders", c.handlerUserOrdersGET)
 
-		userRouter.Get("/balance", c.handlerUserBalanceGET)
-		userRouter.Post("/balance/withdraw", c.handlerUserBalanceWithdrawPOST)
+		r.Get("/balance", c.handlerUserBalanceGET)
+		r.Post("/balance/withdraw", c.handlerUserBalanceWithdrawPOST)
 
-		userRouter.Get("/withdrawals", c.handlerUserWithdrawalsGET)
+		r.Get("/withdrawals", c.handlerUserWithdrawalsGET)
 	})
 
 	return userRouter

@@ -27,14 +27,31 @@ func (r *orderRepository) AddOrder(ctx context.Context, addModel *model.AddOrder
 	INSERT INTO orders (id, status, accrual, user_id) 
 	VALUES (:order_id, :status, :accrual, :user_id)
 	`
-	_, err := r.conn.NamedExec(query, addModel)
+	_, err := r.conn.NamedExecContext(ctx, query, addModel)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
-			
+			// проверим кому принадлежит заказ, чтобы вернуть верную ошибку
+			type GetOrderModel struct {
+				ID     int `db:"id"`
+				UserID int `db:"user_id"`
+			}
+			query = `
+			SELECT id, user_id FROM orders WHERE id=$1
+			`
+			var getOrderModel GetOrderModel
+			err = r.conn.GetContext(ctx, &getOrderModel, query, addModel.OrderID)
+			if err != nil {
+				return err
+			}
+
+			if getOrderModel.UserID == int(addModel.UserID) {
+				return ErrOrderAlreadyExists
+			} else {
+				return ErrOrderBelongsToAnotherUser
+			}
 		}
-		// TODO обрабатывать ошибку, если номер заказа уже существует от текущего пользователя
-		// TODO обрабатывать ошибку, если номер заказа уже существует от другого пользователя
+
 		return err
 	}
 
