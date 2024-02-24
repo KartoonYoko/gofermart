@@ -33,7 +33,7 @@ func (c *HTTPController) middlewareAuth(next http.Handler) http.Handler {
 		if len(arr) == 2 {
 			cookieValue = arr[1]
 		}
-		userID, err = c.uc.ValidateJWTAndGetUserID(cookieValue)
+		userID, err = c.usecaseAuth.ValidateJWTAndGetUserID(cookieValue)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			return

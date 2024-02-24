@@ -29,7 +29,7 @@ func (c *HTTPController) handlerUserRegisterPOST(w http.ResponseWriter, r *http.
 		return
 	}
 
-	jwt, err := c.uc.RegisterAndGetUserJWT(ctx, request.Login, request.Password)
+	jwt, err := c.usecaseAuth.RegisterAndGetUserJWT(ctx, request.Login, request.Password)
 	if err != nil {
 		if errors.Is(err, model.ErrWrongDataFormat) {
 			http.Error(w, "Wrong data format", http.StatusBadRequest)
@@ -69,7 +69,7 @@ func (c *HTTPController) handlerUserLoginPOST(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	jwt, err := c.uc.LoginAndGetUserJWT(ctx, request.Login, request.Password)
+	jwt, err := c.usecaseAuth.LoginAndGetUserJWT(ctx, request.Login, request.Password)
 	if err != nil {
 		if errors.Is(err, model.ErrUserNotFound) {
 			http.Error(w, "Wrong login or password", http.StatusUnauthorized)

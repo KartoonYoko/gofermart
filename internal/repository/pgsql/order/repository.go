@@ -2,8 +2,11 @@ package order
 
 import (
 	"context"
+	"errors"
 	model "gofermart/internal/model/order"
 
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -26,6 +29,10 @@ func (r *orderRepository) AddOrder(ctx context.Context, addModel *model.AddOrder
 	`
 	_, err := r.conn.NamedExec(query, addModel)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
+			
+		}
 		// TODO обрабатывать ошибку, если номер заказа уже существует от текущего пользователя
 		// TODO обрабатывать ошибку, если номер заказа уже существует от другого пользователя
 		return err

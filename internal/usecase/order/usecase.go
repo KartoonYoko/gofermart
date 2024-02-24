@@ -2,8 +2,10 @@ package order
 
 import (
 	"context"
+	"errors"
 	"gofermart/internal/model/auth"
 	model "gofermart/internal/model/order"
+	"gofermart/internal/repository/pgsql/order"
 )
 
 type orderUsecase struct {
@@ -20,8 +22,12 @@ func New(repo OrderRepository) *orderUsecase {
 	}
 }
 
-func (uc *orderUsecase) CreateNewOrder(ctx context.Context, userID auth.UserID, orderID int) error {
-	// TODO написать функцию валидации ID заказа
+// CreateNewOrder - создаёт новый заказ
+// 
+// Возможные ошибки:
+// 	ErrOrderAlreadyExists - у данного пользователя уже существует заказ с таким ID
+// 	ErrOrderBelongsToAnotherUser - данный заказ зарегистрировал другой пользователь
+func (uc *orderUsecase) CreateNewOrder(ctx context.Context, userID auth.UserID, orderID int64) error {
 	err := uc.repo.AddOrder(ctx, &model.AddOrderModel{
 		UserID:  userID,
 		OrderID: orderID,
@@ -30,14 +36,14 @@ func (uc *orderUsecase) CreateNewOrder(ctx context.Context, userID auth.UserID, 
 	})
 
 	if err != nil {
+		if errors.Is(err, order.ErrOrderAlreadyExists) {
+			return model.NewErrOrderAlreadyExists(err, orderID)
+		}
+		if errors.Is(err, order.ErrOrderBelongsToAnotherUser) {
+			return model.NewErrOrderBelongsToAnotherUser(err, orderID)
+		}
 		return err
 	}
 
 	return nil
-}
-
-func (uc *orderUsecase) validateOrderID(orderID int) error {
-	// TODO написать функцию валидации
-	// https://ru.wikipedia.org/wiki/%D0%90%D0%BB%D0%B3%D0%BE%D1%80%D0%B8%D1%82%D0%BC_%D0%9B%D1%83%D0%BD%D0%B0
-	// model.NewErrWrongFormatOfOrderID()
 }

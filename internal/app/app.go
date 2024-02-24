@@ -8,7 +8,9 @@ import (
 	"gofermart/internal/logger"
 	"gofermart/internal/repository/pgsql"
 	repoAuth "gofermart/internal/repository/pgsql/auth"
+	repoOrder "gofermart/internal/repository/pgsql/order"
 	usecaseAuth "gofermart/internal/usecase/auth"
+	usecaseOrder "gofermart/internal/usecase/order"
 	"gofermart/pkg/hash"
 	"log"
 
@@ -33,6 +35,29 @@ func Run() {
 	confAuth := config.NewAuthConfig("some sault")
 
 	// хранилище
+	db := initDB(ctx, *conf)
+	repositoryAuth, err := repoAuth.New(ctx, db)
+	if err != nil {
+		log.Fatal(err)
+	}
+	repoOrder, err := repoOrder.New(ctx, db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// хешер для паролей
+	hasher := hash.NewSHA1PasswordHasher(confAuth.Sault)
+
+	// usecases
+	usecaseAuth := usecaseAuth.New(confJWT, confAuth, repositoryAuth, hasher)
+	usecaseOrder := usecaseOrder.New(repoOrder)
+
+	//
+	controller := httpserver.New(conf, usecaseAuth, usecaseOrder)
+	controller.Serve(ctx)
+}
+
+func initDB(ctx context.Context, conf config.Config) *sqlx.DB {
 	db, err := sqlx.Connect("pgx", conf.DatabaseURL)
 	if err != nil {
 		log.Fatal(err)
@@ -45,21 +70,5 @@ func Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	repositoryAuth, err := repoAuth.New(ctx, db)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// хешер для паролей
-	hasher := hash.NewSHA1PasswordHasher(confAuth.Sault)
-
-	// usecases
-	usecaseAuth, err := usecaseAuth.New(confJWT, confAuth, repositoryAuth, hasher)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	//
-	controller := httpserver.New(conf, usecaseAuth)
-	controller.Serve(ctx)
+	return db
 }

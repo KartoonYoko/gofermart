@@ -3,6 +3,7 @@ package httpserver
 import (
 	"context"
 	"gofermart/config"
+	"gofermart/internal/model/auth"
 	model "gofermart/internal/model/auth"
 	"log"
 	"net/http"
@@ -16,21 +17,27 @@ import (
 )
 
 type HTTPController struct {
-	r    *chi.Mux
-	conf *config.Config
-	uc   authUsercase
+	r            *chi.Mux
+	conf         *config.Config
+	usecaseAuth  usecaseAuth
+	usecaseOrder usecaseOrder
 }
 
-type authUsercase interface {
+type usecaseOrder interface {
+	CreateNewOrder(ctx context.Context, userID auth.UserID, orderID int64) error
+}
+
+type usecaseAuth interface {
 	RegisterAndGetUserJWT(ctx context.Context, login string, password string) (string, error)
 	LoginAndGetUserJWT(ctx context.Context, login string, password string) (string, error)
 	ValidateJWTAndGetUserID(tokenString string) (model.UserID, error)
 }
 
-func New(conf *config.Config, uc authUsercase) *HTTPController {
+func New(conf *config.Config, ucAuth usecaseAuth, ucOrder usecaseOrder) *HTTPController {
 	c := &HTTPController{
-		conf: conf,
-		uc:   uc,
+		conf:         conf,
+		usecaseAuth:  ucAuth,
+		usecaseOrder: ucOrder,
 	}
 	r := chi.NewRouter()
 	c.r = r

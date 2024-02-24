@@ -15,7 +15,7 @@ const (
 // модель добавления заказа в хранилище
 type AddOrderModel struct {
 	UserID  auth.UserID `db:"user_id"`
-	OrderID int         `db:"order_id"`
+	OrderID int64       `db:"order_id"`
 	Status  OrderStatus `db:"status"`
 	Accrual int         `db:"accrual"`
 }

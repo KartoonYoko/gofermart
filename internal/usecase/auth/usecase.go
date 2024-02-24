@@ -31,7 +31,7 @@ type PasswordHasher interface {
 	Hash(password string) (string, error)
 }
 
-func New(confJWT *config.JWTConfig, confAuth *config.AuthConfig, repo AuthRepository, passwordHasher PasswordHasher) (*authUsecase, error) {
+func New(confJWT *config.JWTConfig, confAuth *config.AuthConfig, repo AuthRepository, passwordHasher PasswordHasher) *authUsecase {
 	uc := &authUsecase{
 		confJWT:        confJWT,
 		confAuth:       confAuth,
@@ -39,7 +39,7 @@ func New(confJWT *config.JWTConfig, confAuth *config.AuthConfig, repo AuthReposi
 		passwordHasher: passwordHasher,
 	}
 
-	return uc, nil
+	return uc
 }
 
 // Register регистрирует пользователя
