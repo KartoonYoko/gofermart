@@ -35,6 +35,7 @@ func (r *orderAccrualRepository) GetUnhandledOrders(ctx context.Context) ([]mode
 	return orders, nil
 }
 
+// AccrualToOrderAndUser - начислит баллы в заказ, также прибавит эти баллы пользователю
 func (r *orderAccrualRepository) AccrualToOrderAndUser(ctx context.Context, orderID int64, userID auth.UserID, sum int) error {
-	
+	r.conn.
 }
