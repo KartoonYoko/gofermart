@@ -3,9 +3,13 @@ package order
 import (
 	"context"
 	"errors"
+	"gofermart/internal/logger"
 	"gofermart/internal/model/auth"
 	model "gofermart/internal/model/order"
 	"gofermart/internal/repository/pgsql/order"
+	"strconv"
+
+	"go.uber.org/zap"
 )
 
 type orderUsecase struct {
@@ -14,6 +18,7 @@ type orderUsecase struct {
 
 type OrderRepository interface {
 	AddOrder(ctx context.Context, addModel *model.AddOrderModel) error
+	GetUserOrders(ctx context.Context, userID auth.UserID) ([]model.GetUserOrderModel, error)
 }
 
 func New(repo OrderRepository) *orderUsecase {
@@ -23,10 +28,11 @@ func New(repo OrderRepository) *orderUsecase {
 }
 
 // CreateNewOrder - создаёт новый заказ
-// 
+//
 // Возможные ошибки:
-// 	ErrOrderAlreadyExists - у данного пользователя уже существует заказ с таким ID
-// 	ErrOrderBelongsToAnotherUser - данный заказ зарегистрировал другой пользователь
+//
+//	ErrOrderAlreadyExists - у данного пользователя уже существует заказ с таким ID
+//	ErrOrderBelongsToAnotherUser - данный заказ зарегистрировал другой пользователь
 func (uc *orderUsecase) CreateNewOrder(ctx context.Context, userID auth.UserID, orderID int64) error {
 	err := uc.repo.AddOrder(ctx, &model.AddOrderModel{
 		UserID:  userID,
@@ -46,4 +52,24 @@ func (uc *orderUsecase) CreateNewOrder(ctx context.Context, userID auth.UserID, 
 	}
 
 	return nil
+}
+
+func (uc *orderUsecase) GetUserOrders(ctx context.Context, userID auth.UserID) ([]model.GetUserOrderAPIModel, error) {
+	res, err := uc.repo.GetUserOrders(ctx, userID)
+	if err != nil {
+		logger.Log.Error("order usecase", zap.Error(err))
+		return nil, err
+	}
+
+	response := []model.GetUserOrderAPIModel{}
+	for _, r := range res {
+		response = append(response, model.GetUserOrderAPIModel{
+			OrderID:    strconv.FormatInt(r.OrderID, 10),
+			Status:     r.Status,
+			Accrual:    r.Accrual,
+			UploadedAt: r.CreatedAt,
+		})
+	}
+
+	return response, nil
 }

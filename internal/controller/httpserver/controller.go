@@ -4,6 +4,7 @@ import (
 	"context"
 	"gofermart/config"
 	modelAuth "gofermart/internal/model/auth"
+	modelOrder "gofermart/internal/model/order"
 	"log"
 	"net/http"
 	"os"
@@ -25,6 +26,7 @@ type HTTPController struct {
 
 type usecaseOrder interface {
 	CreateNewOrder(ctx context.Context, userID modelAuth.UserID, orderID int64) error
+	GetUserOrders(ctx context.Context, userID modelAuth.UserID) ([]modelOrder.GetUserOrderAPIModel, error)
 }
 
 type usecaseOrderAccrual interface {

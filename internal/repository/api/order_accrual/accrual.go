@@ -22,8 +22,8 @@ func New(conf config.Config) *orderAccrualAPI {
 	}
 }
 
-func (api *orderAccrualAPI) GetOrderAccrual(ctx context.Context, orderID int64) (*model.GetOrderAccrualAPIModel, error) {
-	res := &model.GetOrderAccrualAPIModel{}
+func (api *orderAccrualAPI) GetOrderAccrual(ctx context.Context, orderID int64) (*model.GetOrderAccrualFromRemoteModel, error) {
+	res := &model.GetOrderAccrualFromRemoteModel{}
 	resp, err := api.client.R().
 		SetContext(ctx).
 		SetResult(res).

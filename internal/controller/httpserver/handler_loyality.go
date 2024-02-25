@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"encoding/json"
 	"errors"
 	"gofermart/internal/model/auth"
 	modelOrder "gofermart/internal/model/order"
@@ -57,21 +58,45 @@ func (c *HTTPController) handlerUserOrdersPOST(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// TODO сделать отдельную горутину для проверки статусов заказов;
-	// при успешной обработке в одной ТРАНЗАКЦИИ изменить статус заказа, сохранить начисленные баллы
-	// и прибавить эти баллы к существующем у пользователя на данный момент
 	w.WriteHeader(http.StatusAccepted)
 }
 
-// получение списка загруженных пользователем номеров заказов, статусов их обработки и информации о начислениях;
+// handlerUserOrdersGET - получение списка загруженных пользователем номеров заказов, статусов их обработки и информации о начислениях;
+//
+// Ответы:
+//
+//	200 — успешная обработка запроса.
+//	204 — нет данных для ответа.
+//	401 — пользователь не авторизован.
+//	500 — внутренняя ошибка сервера.
 func (c *HTTPController) handlerUserOrdersGET(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
-	// var request model.CreateShortenURLRequest
-	// if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-	// 	http.Error(w, "Can not parse body", http.StatusBadRequest)
-	// 	return
-	// }
-	w.WriteHeader(http.StatusInternalServerError)
+	ctx := r.Context()
+	ctxUserID := ctx.Value(keyUserID)
+	userID, ok := ctxUserID.(auth.UserID)
+	if !ok {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	res, err := c.usecaseOrder.GetUserOrders(ctx, userID)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	if len(res) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	jsonStr, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(jsonStr))
 }
 
 // получение текущего баланса счёта баллов лояльности пользователя;

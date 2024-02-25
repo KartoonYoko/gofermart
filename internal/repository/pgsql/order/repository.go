@@ -3,6 +3,7 @@ package order
 import (
 	"context"
 	"errors"
+	"gofermart/internal/model/auth"
 	model "gofermart/internal/model/order"
 
 	"github.com/jackc/pgerrcode"
@@ -56,4 +57,18 @@ func (r *orderRepository) AddOrder(ctx context.Context, addModel *model.AddOrder
 	}
 
 	return nil
+}
+
+func (r *orderRepository) GetUserOrders(ctx context.Context, userID auth.UserID) ([]model.GetUserOrderModel, error) {
+	query := `
+	SELECT id, user_id, status, accrual, created_at FROM orders
+	WHERE user_id=$1
+	ORDER BY created_at
+	`
+	res := []model.GetUserOrderModel{}
+	err := r.conn.SelectContext(ctx, &res, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }

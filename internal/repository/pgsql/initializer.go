@@ -48,6 +48,7 @@ func (in *initializer) Init(ctx context.Context) error {
 		"status" VARCHAR,
 		"accrual" INTEGER,
 		"user_id" INTEGER,
+		"created_at" TIMESTAMP without time zone default (now() at time zone 'utc'),
 
 		CONSTRAINT fk_user_id
 		FOREIGN KEY (user_id) 

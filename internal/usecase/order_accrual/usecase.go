@@ -24,7 +24,7 @@ type OrderAccrualRepository interface {
 }
 
 type OrderAccrualAPI interface {
-	GetOrderAccrual(ctx context.Context, orderID int64) (*model.GetOrderAccrualAPIModel, error)
+	GetOrderAccrual(ctx context.Context, orderID int64) (*model.GetOrderAccrualFromRemoteModel, error)
 }
 
 func New(repo OrderAccrualRepository, api OrderAccrualAPI) *orderAccrualUsecase {
@@ -36,7 +36,7 @@ func New(repo OrderAccrualRepository, api OrderAccrualAPI) *orderAccrualUsecase 
 
 type requestAPIResult struct {
 	orderModel    *model.GetOrderModel
-	orderAPIModel *model.GetOrderAccrualAPIModel
+	orderAPIModel *model.GetOrderAccrualFromRemoteModel
 	err           error
 }
 
@@ -138,10 +138,10 @@ func (uc *orderAccrualUsecase) get(ctx context.Context, orders []model.GetOrderM
 	return results
 }
 
-type Effector func(ctx context.Context, orderID int64) (*model.GetOrderAccrualAPIModel, error)
+type Effector func(ctx context.Context, orderID int64) (*model.GetOrderAccrualFromRemoteModel, error)
 
 func Retry(effector Effector, retries int) Effector {
-	return func(ctx context.Context, orderID int64) (*model.GetOrderAccrualAPIModel, error) {
+	return func(ctx context.Context, orderID int64) (*model.GetOrderAccrualFromRemoteModel, error) {
 		for r := 0; ; r++ {
 			response, err := effector(ctx, orderID)
 			if err == nil || r >= retries {

@@ -2,8 +2,8 @@ package orderaccrual
 
 import "gofermart/internal/model/auth"
 
-// GetOrderAccrualAPIModel - модель получения информации о начислении баллов из системы начисления баллов
-type GetOrderAccrualAPIModel struct {
+// GetOrderAccrualFromRemoteModel - модель получения информации о начислении баллов из системы начисления баллов
+type GetOrderAccrualFromRemoteModel struct {
 	Order string `json:"order"`
 	// Возможные значения:
 	//
