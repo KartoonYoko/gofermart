@@ -6,6 +6,7 @@ import (
 	modelAuth "gofermart/internal/model/auth"
 	modelBalance "gofermart/internal/model/balance"
 	modelOrder "gofermart/internal/model/order"
+	modelWithdraw "gofermart/internal/model/withdraw"
 	"log"
 	"net/http"
 	"os"
@@ -29,6 +30,7 @@ type HTTPController struct {
 
 type usecaseWithdraw interface {
 	WithdrawFromUserBalance(ctx context.Context, userID modelAuth.UserID, orderID int64, sum int) error
+	GetUserWithdrawals(ctx context.Context, userID modelAuth.UserID) ([]modelWithdraw.GetUserWithdrawModel, error)
 }
 
 type usecaseBalance interface {

@@ -12,6 +12,7 @@ type usecaseWithdraw struct {
 
 type repositoryWithdraw interface {
 	WithdrawFromUserBalance(ctx context.Context, addModel modelWithdraw.AddUserWithdrawModel) error
+	GetUserWithdrawals(ctx context.Context, userID auth.UserID) ([]modelWithdraw.GetUserWithdrawModel, error)
 }
 
 func New(repo repositoryWithdraw) *usecaseWithdraw {
@@ -26,4 +27,8 @@ func (uc *usecaseWithdraw) WithdrawFromUserBalance(ctx context.Context, userID a
 		OrderID: orderID,
 		Sum:     sum,
 	})
+}
+
+func (uc *usecaseWithdraw) GetUserWithdrawals(ctx context.Context, userID auth.UserID) ([]modelWithdraw.GetUserWithdrawModel, error) {
+	return uc.repo.GetUserWithdrawals(ctx, userID)
 }

@@ -90,14 +90,14 @@ func (c *HTTPController) handlerUserOrdersGET(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	jsonStr, err := json.Marshal(res)
+	jsonResult, err := json.Marshal(res)
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(jsonStr))
+	w.Write(jsonResult)
 }
 
 // получение текущего баланса счёта баллов лояльности пользователя;
@@ -176,13 +176,41 @@ func (c *HTTPController) handlerUserBalanceWithdrawPOST(w http.ResponseWriter, r
 	w.WriteHeader(http.StatusOK)
 }
 
-// получение информации о выводе средств с накопительного счёта пользователем
+// handlerUserWithdrawalsGET получение информации о выводе средств с накопительного счёта пользователем
+//
+// Ответы:
+//
+//	200 — успешная обработка запроса.
+//	204 — нет ни одного списания.
+//	401 — пользователь не авторизован.
+//	500 — внутренняя ошибка сервера.
 func (c *HTTPController) handlerUserWithdrawalsGET(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
-	// var request model.CreateShortenURLRequest
-	// if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-	// 	http.Error(w, "Can not parse body", http.StatusBadRequest)
-	// 	return
-	// }
-	w.WriteHeader(http.StatusInternalServerError)
+	ctx := r.Context()
+	ctxUserID := ctx.Value(keyUserID)
+	userID, ok := ctxUserID.(auth.UserID)
+	if !ok {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	res, err := c.usecaseWithdraw.GetUserWithdrawals(ctx, userID)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	if len(res) == 0 {
+		w.Header().Set("content-type", "application/json")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	jsonResult, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResult)
 }

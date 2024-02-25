@@ -2,6 +2,7 @@ package withdraw
 
 import (
 	"context"
+	"gofermart/internal/model/auth"
 	modelWithdraw "gofermart/internal/model/withdraw"
 
 	"github.com/jmoiron/sqlx"
@@ -63,4 +64,20 @@ func (r *repositoryWithdraw) WithdrawFromUserBalance(ctx context.Context, addMod
 	}
 
 	return tx.Commit()
+}
+
+func (r *repositoryWithdraw) GetUserWithdrawals(ctx context.Context, userID auth.UserID) ([]modelWithdraw.GetUserWithdrawModel, error) {
+	query := `
+	SELECT order_id, sum, processed_at FROM withdrawals
+	WHERE user_id=$1
+	ORDER BY processed_at
+	`
+
+	withdrawals := []modelWithdraw.GetUserWithdrawModel{}
+	err := r.conn.SelectContext(ctx, &withdrawals, query, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return withdrawals, nil
 }
