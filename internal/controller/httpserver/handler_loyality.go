@@ -5,6 +5,7 @@ import (
 	"errors"
 	"gofermart/internal/model/auth"
 	modelOrder "gofermart/internal/model/order"
+	modelWithdraw "gofermart/internal/model/withdraw"
 	"gofermart/pkg/luhn"
 	"io"
 	"net/http"
@@ -131,19 +132,48 @@ func (c *HTTPController) handlerUserBalanceGET(w http.ResponseWriter, r *http.Re
 	w.Write([]byte(jsonStr))
 }
 
-// запрос на списание баллов с накопительного счёта в счёт оплаты нового заказа;
+// handlerUserBalanceWithdrawPOST запрос на списание баллов с накопительного счёта в счёт оплаты нового заказа;
+//
+// Ответы:
+//
+//	200 — успешная обработка запроса;
+//	401 — пользователь не авторизован;
+//	402 — на счету недостаточно средств;
+//	422 — неверный номер заказа;
+//	500 — внутренняя ошибка сервера.
 func (c *HTTPController) handlerUserBalanceWithdrawPOST(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
-	// var request model.CreateShortenURLRequest
-	// if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-	// 	http.Error(w, "Can not parse body", http.StatusBadRequest)
-	// 	return
-	// }
+	ctx := r.Context()
+	ctxUserID := ctx.Value(keyUserID)
+	userID, ok := ctxUserID.(auth.UserID)
+	if !ok {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	type requestType struct {
+		Order string `json:"order"`
+		Sum   int    `json:"sum"`
+	}
+	var request requestType
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Can not parse body", http.StatusBadRequest)
+		return
+	}
+	orderID, err := luhn.CheckStr(string(request.Order))
+	if err != nil {
+		http.Error(w, "Wrong order id format", http.StatusUnprocessableEntity)
+		return
+	}
+	err = c.usecaseWithdraw.WithdrawFromUserBalance(ctx, userID, orderID, request.Sum)
+	if err != nil {
+		if errors.Is(err, modelWithdraw.ErrUserHasNotEnoughBalance) {
+			http.Error(w, "Not enough balance", http.StatusPaymentRequired)
+			return
+		}
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
 
-	// TODO проверить достаточно ли баллов на счету;
-	// в одной ТРАНЗАКЦИИ списать баллы и добавить записб о списании в таблицу списания баллов;
-	// нужно добавлять заказ к себе в БД;
-	w.WriteHeader(http.StatusInternalServerError)
+	w.WriteHeader(http.StatusOK)
 }
 
 // получение информации о выводе средств с накопительного счёта пользователем

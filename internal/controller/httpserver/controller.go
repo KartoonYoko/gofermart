@@ -24,6 +24,11 @@ type HTTPController struct {
 	usecaseOrder        usecaseOrder
 	usecaseOrderAccrual usecaseOrderAccrual
 	usecaseBalance      usecaseBalance
+	usecaseWithdraw     usecaseWithdraw
+}
+
+type usecaseWithdraw interface {
+	WithdrawFromUserBalance(ctx context.Context, userID modelAuth.UserID, orderID int64, sum int) error
 }
 
 type usecaseBalance interface {
@@ -49,7 +54,9 @@ func New(conf *config.Config,
 	ucAuth usecaseAuth,
 	ucOrder usecaseOrder,
 	usecaseOrderAccrual usecaseOrderAccrual,
-	usecaseBalance usecaseBalance) *HTTPController {
+	usecaseBalance usecaseBalance,
+	usecaseWithdraw usecaseWithdraw,
+) *HTTPController {
 	c := &HTTPController{
 		conf:                conf,
 		usecaseAuth:         ucAuth,
