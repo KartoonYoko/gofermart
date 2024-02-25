@@ -65,6 +65,7 @@ func New(conf *config.Config,
 		usecaseOrder:        ucOrder,
 		usecaseOrderAccrual: usecaseOrderAccrual,
 		usecaseBalance:      usecaseBalance,
+		usecaseWithdraw:     usecaseWithdraw,
 	}
 	r := chi.NewRouter()
 	c.r = r
