@@ -9,4 +9,5 @@ type GetOrderAccrualAPIModel struct {
 type GetOrderModel struct {
 	ID     int64  `db:"id"`
 	Status string `db:"status"`
+	UserID string `db:"user_id"`
 }

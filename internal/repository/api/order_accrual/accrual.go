@@ -1,6 +1,7 @@
 package orderaccrual
 
 import (
+	"context"
 	"gofermart/config"
 	model "gofermart/internal/model/order_accrual"
 	"net/http"
@@ -21,9 +22,10 @@ func New(conf config.Config) *orderAccrualAPI {
 	}
 }
 
-func (api *orderAccrualAPI) GetOrderAccrual(orderID int64) (*model.GetOrderAccrualAPIModel, error) {
+func (api *orderAccrualAPI) GetOrderAccrual(ctx context.Context, orderID int64) (*model.GetOrderAccrualAPIModel, error) {
 	var res *model.GetOrderAccrualAPIModel
 	resp, err := api.client.R().
+		SetContext(ctx).
 		SetResult(res).
 		Get("/api/orders/" + strconv.FormatInt(orderID, 10))
 	if err != nil {

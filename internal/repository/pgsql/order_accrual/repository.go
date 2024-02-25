@@ -2,6 +2,7 @@ package orderaccrual
 
 import (
 	"context"
+	"gofermart/internal/model/auth"
 	model "gofermart/internal/model/order_accrual"
 
 	"github.com/jmoiron/sqlx"
@@ -21,7 +22,7 @@ func New(ctx context.Context, db *sqlx.DB) (*orderAccrualRepository, error) {
 
 func (r *orderAccrualRepository) GetUnhandledOrders(ctx context.Context) ([]model.GetOrderModel, error) {
 	query := `
-		SELECT * FROM orders
+		SELECT id, status, user_id FROM orders
 		WHERE status!='INVALID' AND status!='PROCESSED'
 	`
 
@@ -32,4 +33,8 @@ func (r *orderAccrualRepository) GetUnhandledOrders(ctx context.Context) ([]mode
 	}
 
 	return orders, nil
+}
+
+func (r *orderAccrualRepository) AccrualToOrderAndUser(ctx context.Context, orderID int64, userID auth.UserID, sum int) error {
+	
 }
