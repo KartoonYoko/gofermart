@@ -36,7 +36,7 @@ func (r *repositoryWithdraw) WithdrawFromUserBalance(ctx context.Context, addMod
 	}
 	user := &userData{}
 	query := `
-	SELECT loyality_balance_current, loyality_balance_withdrawn FROM user WHERE id=$1
+	SELECT loyality_balance_current, loyality_balance_withdrawn FROM users WHERE id=$1
 	`
 	err = tx.QueryRowContext(ctx, query, addModel.UserID).Scan(&user.Current, &user.Withdraw)
 	if err != nil {
@@ -55,10 +55,10 @@ func (r *repositoryWithdraw) WithdrawFromUserBalance(ctx context.Context, addMod
 
 	query = `
 	UPDATE users
-	SET loyality_balance_withdrawn = $1
-	WHERE id=$2;
+	SET loyality_balance_withdrawn=$1, loyality_balance_current=$2
+	WHERE id=$3;
 	`
-	_, err = tx.ExecContext(ctx, query, user.Withdraw+addModel.Sum, addModel.UserID)
+	_, err = tx.ExecContext(ctx, query, user.Withdraw+addModel.Sum, user.Withdraw-addModel.Sum, addModel.UserID)
 	if err != nil {
 		return err
 	}
