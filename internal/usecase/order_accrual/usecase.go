@@ -42,7 +42,7 @@ type requestAPIResult struct {
 
 func (uc *orderAccrualUsecase) StartWorkerToHandleOrderAccrual(ctx context.Context) {
 	go func() {
-		delay := time.Second * 10
+		delay := time.Second * 5
 		for {
 			uc.updateUnhandledOrdersAccrual(ctx)
 
@@ -149,7 +149,7 @@ func Retry(effector Effector, retries int) Effector {
 			}
 
 			// генерируем случайное время ожидания
-			delay := time.Duration(rand.Intn(10)) * time.Second
+			delay := time.Duration(rand.Intn(5)) * time.Second
 			select {
 			case <-time.After(delay):
 			case <-ctx.Done():
