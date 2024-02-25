@@ -58,7 +58,7 @@ func (r *repositoryWithdraw) WithdrawFromUserBalance(ctx context.Context, addMod
 	SET loyality_balance_withdrawn=$1, loyality_balance_current=$2
 	WHERE id=$3;
 	`
-	_, err = tx.ExecContext(ctx, query, user.Withdraw+addModel.Sum, user.Withdraw-addModel.Sum, addModel.UserID)
+	_, err = tx.ExecContext(ctx, query, user.Withdraw+addModel.Sum, user.Current-addModel.Sum, addModel.UserID)
 	if err != nil {
 		return err
 	}
