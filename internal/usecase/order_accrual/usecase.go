@@ -2,11 +2,11 @@ package orderaccrual
 
 import (
 	"context"
-	"crypto/rand"
 	"gofermart/internal/logger"
 	"gofermart/internal/model/auth"
 	modelOrder "gofermart/internal/model/order"
 	model "gofermart/internal/model/order_accrual"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -148,14 +148,8 @@ func Retry(effector Effector, retries int) Effector {
 				return response, err
 			}
 
-			// стандартное время ожидания
-			delay := time.Second * 5
 			// генерируем случайное время ожидания
-			b := make([]byte, 1)
-			_, err = rand.Read(b)
-			if err == nil {
-				delay = time.Duration(b[0]) * time.Second
-			}
+			delay := time.Duration(rand.Intn(10)) * time.Second
 			select {
 			case <-time.After(delay):
 			case <-ctx.Done():

@@ -23,7 +23,7 @@ func New(conf config.Config) *orderAccrualAPI {
 }
 
 func (api *orderAccrualAPI) GetOrderAccrual(ctx context.Context, orderID int64) (*model.GetOrderAccrualAPIModel, error) {
-	var res *model.GetOrderAccrualAPIModel
+	var res *model.GetOrderAccrualAPIModel = &model.GetOrderAccrualAPIModel{}
 	resp, err := api.client.R().
 		SetContext(ctx).
 		SetResult(res).
