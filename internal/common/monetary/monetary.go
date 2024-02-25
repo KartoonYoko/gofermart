@@ -5,5 +5,7 @@ func GetCurencyFromFloat64(f float64) int {
 }
 
 func GetFloat64FromCurrency(currency int) float64 {
-	return float64(currency/100 + currency%100)
+	intNum := currency/100
+	remainder := currency%100
+	return float64(intNum) + float64(remainder) / 100
 }
