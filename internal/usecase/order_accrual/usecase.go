@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/rand"
 	"gofermart/internal/logger"
+	"gofermart/internal/model/auth"
+	modelOrder "gofermart/internal/model/order"
 	model "gofermart/internal/model/order_accrual"
 	"sync"
 	"time"
@@ -18,6 +20,7 @@ type orderAccrualUsecase struct {
 
 type OrderAccrualRepository interface {
 	GetUnhandledOrders(ctx context.Context) ([]model.GetOrderModel, error)
+	AccrualToOrderAndUser(ctx context.Context, orderID int64, userID auth.UserID, sum int, orderStatus modelOrder.OrderStatus) error
 }
 
 type OrderAccrualAPI interface {
@@ -32,38 +35,80 @@ func New(repo OrderAccrualRepository, api OrderAccrualAPI) *orderAccrualUsecase 
 }
 
 type requestAPIResult struct {
-	orderID       int64
+	orderModel    *model.GetOrderModel
 	orderAPIModel *model.GetOrderAccrualAPIModel
 	err           error
 }
 
-func (uc *orderAccrualUsecase) Go(ctx context.Context) {
+func (uc *orderAccrualUsecase) StartWorkerToHandleOrderAccrual(ctx context.Context) {
+	go func() {
+		delay := time.Second * 10
+		for {
+			uc.updateUnhandledOrdersAccrual(ctx)
+
+			select {
+			case <-time.After(delay):
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+}
+
+// updateUnhandledOrdersAccrual - обновит начисления у необработанных заказов. Также начислит баллы пользователям, которые создали этот заказ
+func (uc *orderAccrualUsecase) updateUnhandledOrdersAccrual(ctx context.Context) {
 	unhandledOrders, err := uc.repo.GetUnhandledOrders(ctx)
 	if err != nil {
 		logger.Log.Error("get unhandled orders accrual usecase", zap.Error(err))
 		return
 	}
 
+	if len(unhandledOrders) == 0 {
+		return
+	}
+
 	result := uc.get(ctx, unhandledOrders)
 	successResult := make([]requestAPIResult, 0, len(result))
-	unSuccessRsult := make([]requestAPIResult, 0, len(result))
+	notSuccessResult := make([]requestAPIResult, 0, len(result))
 	for _, r := range result {
 		if r.err == nil {
 			successResult = append(successResult, r)
 		} else {
-			unSuccessRsult = append(unSuccessRsult, r)
+			notSuccessResult = append(notSuccessResult, r)
 		}
 	}
 
-	// лоигруем ошибки
-	for _, r := range unSuccessRsult {
-		logger.Log.Error("get order accrual usecase", zap.Int64("orderID", r.orderID), zap.Error(r.err))
+	// логируем ошибки
+	for _, r := range notSuccessResult {
+		logger.Log.Error("get order accrual usecase", zap.Int64("orderID", r.orderModel.ID), zap.Error(r.err))
 	}
 
-	// - получить все необработанные заказы
-	// - сформировать данные для запросов к АПИ
-	// - запустить горутины для сбора данных из АПИ
-	// - сохранить статус обработки и начисленные баллы как в таблицу заказво так и в таблицу пользователей
+	for _, r := range successResult {
+		sum := 0
+		if r.orderAPIModel.Accrual != nil && *r.orderAPIModel.Accrual > 0 {
+			sum = *r.orderAPIModel.Accrual
+		}
+
+		var orderStatus modelOrder.OrderStatus = "NEW"
+		if r.orderAPIModel.Status == "REGISTERED" {
+			orderStatus = "NEW"
+		} else if r.orderAPIModel.Status == "PROCESSING" {
+			orderStatus = "PROCESSING"
+		} else if r.orderAPIModel.Status == "INVALID" {
+			orderStatus = "INVALID"
+		} else if r.orderAPIModel.Status == "PROCESSED" {
+			orderStatus = "PROCESSED"
+		}
+
+		if !orderStatus.Valid() {
+			logger.Log.Error("not valid order status", zap.String("status", string(orderStatus)))
+			continue
+		}
+		err = uc.repo.AccrualToOrderAndUser(ctx, r.orderModel.ID, r.orderModel.UserID, sum, orderStatus)
+		if err != nil {
+			logger.Log.Error("error order accrual", zap.Error(err))
+		}
+	}
 }
 
 func (uc *orderAccrualUsecase) get(ctx context.Context, orders []model.GetOrderModel) []requestAPIResult {
@@ -79,7 +124,7 @@ func (uc *orderAccrualUsecase) get(ctx context.Context, orders []model.GetOrderM
 			orderAccrualAPIModel, err := requestWithRetry(ctx, order.ID)
 			m.Lock()
 			results = append(results, requestAPIResult{
-				orderID: order.ID,
+				orderModel:    &order,
 				orderAPIModel: orderAccrualAPIModel,
 				err:           err,
 			})

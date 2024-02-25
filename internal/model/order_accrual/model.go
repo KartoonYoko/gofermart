@@ -1,13 +1,28 @@
 package orderaccrual
 
+import "gofermart/internal/model/auth"
+
+// GetOrderAccrualAPIModel - модель получения информации о начислении баллов из системы начисления баллов
 type GetOrderAccrualAPIModel struct {
-	Order   string `json:"order"`
+	Order string `json:"order"`
+	// Возможные значения:
+	//
+	//	REGISTERED — заказ зарегистрирован, но вознаграждение не рассчитано;
+	// 	INVALID — заказ не принят к расчёту, и вознаграждение не будет начислено;
+	// 	PROCESSING — расчёт начисления в процессе;
+	// 	PROCESSED — расчёт начисления окончен;
 	Status  string `json:"status"`
 	Accrual *int   `json:"accrual"`
 }
 
 type GetOrderModel struct {
-	ID     int64  `db:"id"`
-	Status string `db:"status"`
-	UserID string `db:"user_id"`
+	ID int64 `db:"id"`
+	// Возможные значения:
+	//
+	//	NEW — заказ загружен в систему, но не попал в обработку;
+	// 	PROCESSING — вознаграждение за заказ рассчитывается;
+	// 	INVALID — система расчёта вознаграждений отказала в расчёте;
+	// 	PROCESSED — данные по заказу проверены и информация о расчёте успешно получена.
+	Status string      `db:"status"`
+	UserID auth.UserID `db:"user_id"`
 }

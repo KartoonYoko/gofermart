@@ -3,6 +3,11 @@ package order
 import "gofermart/internal/model/auth"
 
 // возможные статусы заказа
+//
+//	NEW — заказ загружен в систему, но не попал в обработку;
+// 	PROCESSING — вознаграждение за заказ рассчитывается;
+// 	INVALID — система расчёта вознаграждений отказала в расчёте;
+// 	PROCESSED — данные по заказу проверены и информация о расчёте успешно получена.
 type OrderStatus string
 
 const (
@@ -11,6 +16,13 @@ const (
 	OrderStatusInvalid    OrderStatus = "INVALID"
 	OrderStatusProcessed  OrderStatus = "PROCESSED"
 )
+
+func (os *OrderStatus) Valid() bool {
+	return *os == "NEW" ||
+		*os == "PROCESSING" ||
+		*os == "INVALID" ||
+		*os == "PROCESSED"
+}
 
 // модель добавления заказа в хранилище
 type AddOrderModel struct {

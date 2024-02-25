@@ -16,14 +16,19 @@ import (
 )
 
 type HTTPController struct {
-	r            *chi.Mux
-	conf         *config.Config
-	usecaseAuth  usecaseAuth
-	usecaseOrder usecaseOrder
+	r                   *chi.Mux
+	conf                *config.Config
+	usecaseAuth         usecaseAuth
+	usecaseOrder        usecaseOrder
+	usecaseOrderAccrual usecaseOrderAccrual
 }
 
 type usecaseOrder interface {
 	CreateNewOrder(ctx context.Context, userID modelAuth.UserID, orderID int64) error
+}
+
+type usecaseOrderAccrual interface {
+	StartWorkerToHandleOrderAccrual(ctx context.Context)
 }
 
 type usecaseAuth interface {
@@ -32,11 +37,12 @@ type usecaseAuth interface {
 	ValidateJWTAndGetUserID(tokenString string) (modelAuth.UserID, error)
 }
 
-func New(conf *config.Config, ucAuth usecaseAuth, ucOrder usecaseOrder) *HTTPController {
+func New(conf *config.Config, ucAuth usecaseAuth, ucOrder usecaseOrder, usecaseOrderAccrual usecaseOrderAccrual) *HTTPController {
 	c := &HTTPController{
-		conf:         conf,
-		usecaseAuth:  ucAuth,
-		usecaseOrder: ucOrder,
+		conf:                conf,
+		usecaseAuth:         ucAuth,
+		usecaseOrder:        ucOrder,
+		usecaseOrderAccrual: usecaseOrderAccrual,
 	}
 	r := chi.NewRouter()
 	c.r = r
@@ -78,6 +84,10 @@ func (c *HTTPController) routeUser() *chi.Mux {
 	})
 
 	return userRouter
+}
+
+func (c *HTTPController) StartWorkers(ctx context.Context) {
+	c.usecaseOrderAccrual.StartWorkerToHandleOrderAccrual(ctx)
 }
 
 func (c *HTTPController) Serve(ctx context.Context) {
