@@ -16,7 +16,7 @@ type GetUserWithdrawModel struct {
 }
 
 type GetUserWithdrawAPIModel struct {
-	OrderID     string  `json:"order_id"`
+	OrderID     string  `json:"order"`
 	ProcessedAt string  `json:"processed_at"`
 	Sum         float64 `json:"sum"`
 }
