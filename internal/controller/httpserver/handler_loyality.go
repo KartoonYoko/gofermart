@@ -84,6 +84,7 @@ func (c *HTTPController) handlerUserOrdersGET(w http.ResponseWriter, r *http.Req
 	}
 
 	if len(res) == 0 {
+		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
@@ -93,7 +94,6 @@ func (c *HTTPController) handlerUserOrdersGET(w http.ResponseWriter, r *http.Req
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(jsonStr))

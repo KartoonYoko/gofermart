@@ -65,7 +65,7 @@ func (in *initializer) Init(ctx context.Context) error {
 	CREATE TABLE IF NOT EXISTS "withdrawals" (
 		"order_id" BIGINT PRIMARY KEY,
 		"user_id" INTEGER,
-		"processed_at" TIMESTAMP,
+		"processed_at" TIMESTAMP without time zone default (now() at time zone 'utc'),
 		"sum" INTEGER,
 
 		CONSTRAINT fk_user_id
