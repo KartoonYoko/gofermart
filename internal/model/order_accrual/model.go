@@ -11,8 +11,8 @@ type GetOrderAccrualFromRemoteModel struct {
 	// 	INVALID — заказ не принят к расчёту, и вознаграждение не будет начислено;
 	// 	PROCESSING — расчёт начисления в процессе;
 	// 	PROCESSED — расчёт начисления окончен;
-	Status  string `json:"status"`
-	Accrual *int   `json:"accrual"`
+	Status  string   `json:"status"`
+	Accrual *float64 `json:"accrual"`
 }
 
 type GetOrderModel struct {

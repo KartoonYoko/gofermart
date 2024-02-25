@@ -6,6 +6,6 @@ type GetUserBalanceModel struct {
 }
 
 type GetUserBalanceAPIModel struct {
-	Current   int `json:"current"`
-	Withdrawn int `json:"withdrawn"`
+	Current   float64 `json:"current"`
+	Withdrawn float64 `json:"withdrawn"`
 }

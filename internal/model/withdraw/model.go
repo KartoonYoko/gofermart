@@ -14,3 +14,9 @@ type GetUserWithdrawModel struct {
 	ProcessedAt string      `db:"processed_at" json:"processed_at"`
 	Sum         int         `db:"sum" json:"sum"`
 }
+
+type GetUserWithdrawAPIModel struct {
+	OrderID     int64   `json:"order_id"`
+	ProcessedAt string  `json:"processed_at"`
+	Sum         float64 `json:"sum"`
+}

@@ -47,6 +47,6 @@ type GetUserOrderModel struct {
 type GetUserOrderAPIModel struct {
 	OrderID    string      `json:"number"`
 	Status     OrderStatus `json:"status"`
-	Accrual    int         `json:"accrual,omitempty"`
+	Accrual    float64     `json:"accrual,omitempty"`
 	UploadedAt string      `json:"uploaded_at"`
 }

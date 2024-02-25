@@ -2,6 +2,7 @@ package withdraw
 
 import (
 	"context"
+	"gofermart/internal/common/monetary"
 	"gofermart/internal/model/auth"
 	modelWithdraw "gofermart/internal/model/withdraw"
 )
@@ -21,14 +22,27 @@ func New(repo repositoryWithdraw) *usecaseWithdraw {
 	}
 }
 
-func (uc *usecaseWithdraw) WithdrawFromUserBalance(ctx context.Context, userID auth.UserID, orderID int64, sum int) error {
+func (uc *usecaseWithdraw) WithdrawFromUserBalance(ctx context.Context, userID auth.UserID, orderID int64, sum float64) error {
 	return uc.repo.WithdrawFromUserBalance(ctx, modelWithdraw.AddUserWithdrawModel{
 		UserID:  userID,
 		OrderID: orderID,
-		Sum:     sum,
+		Sum:     monetary.GetCurencyFromFloat64(sum),
 	})
 }
 
-func (uc *usecaseWithdraw) GetUserWithdrawals(ctx context.Context, userID auth.UserID) ([]modelWithdraw.GetUserWithdrawModel, error) {
-	return uc.repo.GetUserWithdrawals(ctx, userID)
+func (uc *usecaseWithdraw) GetUserWithdrawals(ctx context.Context, userID auth.UserID) ([]modelWithdraw.GetUserWithdrawAPIModel, error) {
+	res, err := uc.repo.GetUserWithdrawals(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []modelWithdraw.GetUserWithdrawAPIModel{}
+	for _, r := range res {
+		result = append(result, modelWithdraw.GetUserWithdrawAPIModel{
+			OrderID:     r.OrderID,
+			ProcessedAt: r.ProcessedAt,
+			Sum:         monetary.GetFloat64FromCurrency(r.Sum),
+		})
+	}
+	return result, nil
 }

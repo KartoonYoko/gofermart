@@ -2,6 +2,7 @@ package orderaccrual
 
 import (
 	"context"
+	"gofermart/internal/common/monetary"
 	"gofermart/internal/logger"
 	"gofermart/internal/model/auth"
 	modelOrder "gofermart/internal/model/order"
@@ -86,7 +87,7 @@ func (uc *orderAccrualUsecase) updateUnhandledOrdersAccrual(ctx context.Context)
 	for _, r := range successResult {
 		sum := 0
 		if r.orderAPIModel.Accrual != nil && *r.orderAPIModel.Accrual > 0 {
-			sum = *r.orderAPIModel.Accrual
+			sum = monetary.GetCurencyFromFloat64(*r.orderAPIModel.Accrual)
 		}
 
 		var orderStatus modelOrder.OrderStatus = "NEW"

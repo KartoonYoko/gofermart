@@ -3,6 +3,7 @@ package order
 import (
 	"context"
 	"errors"
+	"gofermart/internal/common/monetary"
 	"gofermart/internal/logger"
 	"gofermart/internal/model/auth"
 	model "gofermart/internal/model/order"
@@ -66,7 +67,7 @@ func (uc *orderUsecase) GetUserOrders(ctx context.Context, userID auth.UserID) (
 		response = append(response, model.GetUserOrderAPIModel{
 			OrderID:    strconv.FormatInt(r.OrderID, 10),
 			Status:     r.Status,
-			Accrual:    r.Accrual,
+			Accrual:    monetary.GetFloat64FromCurrency(r.Accrual),
 			UploadedAt: r.CreatedAt,
 		})
 	}

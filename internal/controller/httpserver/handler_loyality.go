@@ -150,8 +150,8 @@ func (c *HTTPController) handlerUserBalanceWithdrawPOST(w http.ResponseWriter, r
 		return
 	}
 	type requestType struct {
-		Order string `json:"order"`
-		Sum   int    `json:"sum"`
+		Order string  `json:"order"`
+		Sum   float64 `json:"sum"`
 	}
 	var request requestType
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {

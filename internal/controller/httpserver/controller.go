@@ -29,8 +29,8 @@ type HTTPController struct {
 }
 
 type usecaseWithdraw interface {
-	WithdrawFromUserBalance(ctx context.Context, userID modelAuth.UserID, orderID int64, sum int) error
-	GetUserWithdrawals(ctx context.Context, userID modelAuth.UserID) ([]modelWithdraw.GetUserWithdrawModel, error)
+	WithdrawFromUserBalance(ctx context.Context, userID modelAuth.UserID, orderID int64, sum float64) error
+	GetUserWithdrawals(ctx context.Context, userID modelAuth.UserID) ([]modelWithdraw.GetUserWithdrawAPIModel, error)
 }
 
 type usecaseBalance interface {

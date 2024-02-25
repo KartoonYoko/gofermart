@@ -2,6 +2,7 @@ package balance
 
 import (
 	"context"
+	"gofermart/internal/common/monetary"
 	"gofermart/internal/model/auth"
 	modelBalance "gofermart/internal/model/balance"
 )
@@ -27,7 +28,7 @@ func (uc *usecaseBalance) GetUserBalance(ctx context.Context, userID auth.UserID
 	}
 
 	return &modelBalance.GetUserBalanceAPIModel{
-		Withdrawn: res.Withdrawn,
-		Current:   res.Current,
+		Withdrawn: monetary.GetFloat64FromCurrency(res.Withdrawn),
+		Current:   monetary.GetFloat64FromCurrency(res.Current),
 	}, nil
 }
