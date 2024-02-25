@@ -5,6 +5,7 @@ import (
 	"gofermart/internal/common/monetary"
 	"gofermart/internal/model/auth"
 	modelWithdraw "gofermart/internal/model/withdraw"
+	"strconv"
 )
 
 type usecaseWithdraw struct {
@@ -39,7 +40,7 @@ func (uc *usecaseWithdraw) GetUserWithdrawals(ctx context.Context, userID auth.U
 	result := []modelWithdraw.GetUserWithdrawAPIModel{}
 	for _, r := range res {
 		result = append(result, modelWithdraw.GetUserWithdrawAPIModel{
-			OrderID:     r.OrderID,
+			OrderID:     strconv.FormatInt(r.OrderID, 10),
 			ProcessedAt: r.ProcessedAt,
 			Sum:         monetary.GetFloat64FromCurrency(r.Sum),
 		})
