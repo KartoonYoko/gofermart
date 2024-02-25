@@ -4,6 +4,7 @@ import (
 	"context"
 	"gofermart/config"
 	modelAuth "gofermart/internal/model/auth"
+	modelBalance "gofermart/internal/model/balance"
 	modelOrder "gofermart/internal/model/order"
 	"log"
 	"net/http"
@@ -22,6 +23,11 @@ type HTTPController struct {
 	usecaseAuth         usecaseAuth
 	usecaseOrder        usecaseOrder
 	usecaseOrderAccrual usecaseOrderAccrual
+	usecaseBalance      usecaseBalance
+}
+
+type usecaseBalance interface {
+	GetUserBalance(ctx context.Context, userID modelAuth.UserID) (*modelBalance.GetUserBalanceAPIModel, error)
 }
 
 type usecaseOrder interface {
@@ -39,12 +45,17 @@ type usecaseAuth interface {
 	ValidateJWTAndGetUserID(tokenString string) (modelAuth.UserID, error)
 }
 
-func New(conf *config.Config, ucAuth usecaseAuth, ucOrder usecaseOrder, usecaseOrderAccrual usecaseOrderAccrual) *HTTPController {
+func New(conf *config.Config,
+	ucAuth usecaseAuth,
+	ucOrder usecaseOrder,
+	usecaseOrderAccrual usecaseOrderAccrual,
+	usecaseBalance usecaseBalance) *HTTPController {
 	c := &HTTPController{
 		conf:                conf,
 		usecaseAuth:         ucAuth,
 		usecaseOrder:        ucOrder,
 		usecaseOrderAccrual: usecaseOrderAccrual,
+		usecaseBalance:      usecaseBalance,
 	}
 	r := chi.NewRouter()
 	c.r = r

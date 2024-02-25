@@ -9,9 +9,11 @@ import (
 	apiOrderAccrual "gofermart/internal/repository/api/order_accrual"
 	"gofermart/internal/repository/pgsql"
 	repoAuth "gofermart/internal/repository/pgsql/auth"
+	repoBalance "gofermart/internal/repository/pgsql/balance"
 	repoOrder "gofermart/internal/repository/pgsql/order"
 	repoOrderAccrual "gofermart/internal/repository/pgsql/order_accrual"
 	usecaseAuth "gofermart/internal/usecase/auth"
+	usecaseBalance "gofermart/internal/usecase/balance"
 	usecaseOrder "gofermart/internal/usecase/order"
 	usecaseOrderAccrual "gofermart/internal/usecase/order_accrual"
 	"gofermart/pkg/hash"
@@ -43,6 +45,7 @@ func Run() {
 	repoOrder := repoOrder.New(ctx, db)
 	repoOrderAccrual := repoOrderAccrual.New(ctx, db)
 	apiOrderAccrual := apiOrderAccrual.New(*conf)
+	repoBalance := repoBalance.New(ctx, db)
 
 	// хешер для паролей
 	hasher := hash.NewSHA1PasswordHasher(confAuth.Sault)
@@ -51,9 +54,15 @@ func Run() {
 	usecaseAuth := usecaseAuth.New(confJWT, confAuth, repositoryAuth, hasher)
 	usecaseOrder := usecaseOrder.New(repoOrder)
 	usecaseOrderAccrual := usecaseOrderAccrual.New(repoOrderAccrual, apiOrderAccrual)
+	usecaseBalance := usecaseBalance.New(repoBalance)
 
 	//
-	controller := httpserver.New(conf, usecaseAuth, usecaseOrder, usecaseOrderAccrual)
+	controller := httpserver.New(conf,
+		usecaseAuth,
+		usecaseOrder,
+		usecaseOrderAccrual,
+		usecaseBalance,
+	)
 	controller.StartWorkers(ctx)
 	controller.Serve(ctx)
 }
