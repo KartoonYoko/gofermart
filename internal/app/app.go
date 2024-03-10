@@ -73,17 +73,12 @@ func Run() {
 }
 
 func initDB(ctx context.Context, conf config.Config) *sqlx.DB {
-	db, err := sqlx.Connect("pgx", conf.DatabaseURL)
+	db, err := pgsql.NewSQLxConnection(ctx, &pgsql.Config{
+		ConnectionString: conf.DatabaseURL,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	init, err := pgsql.NewInitializer(ctx, db)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = init.Init(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
+	
 	return db
 }

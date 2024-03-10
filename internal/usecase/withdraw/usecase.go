@@ -9,15 +9,15 @@ import (
 )
 
 type usecaseWithdraw struct {
-	repo repositoryWithdraw
+	repo RepositoryWithdraw
 }
 
-type repositoryWithdraw interface {
+type RepositoryWithdraw interface {
 	WithdrawFromUserBalance(ctx context.Context, addModel modelWithdraw.AddUserWithdrawModel) error
 	GetUserWithdrawals(ctx context.Context, userID auth.UserID) ([]modelWithdraw.GetUserWithdrawModel, error)
 }
 
-func New(repo repositoryWithdraw) *usecaseWithdraw {
+func New(repo RepositoryWithdraw) *usecaseWithdraw {
 	return &usecaseWithdraw{
 		repo: repo,
 	}
