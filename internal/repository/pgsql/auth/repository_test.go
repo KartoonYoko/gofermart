@@ -63,7 +63,7 @@ func (ts *PostgresTestSuite) TearDownTest() {
 	ts.Require().NoError(ts.clean(context.Background()))
 }
 
-func TestPostgres(t *testing.T) {
+func TestAuthRepository(t *testing.T) {
 	suite.Run(t, new(PostgresTestSuite))
 }
 
