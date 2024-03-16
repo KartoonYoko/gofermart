@@ -8,7 +8,6 @@ import (
 	"gofermart/internal/model/auth"
 	modelWithdraw "gofermart/internal/model/withdraw"
 	"gofermart/internal/repository/pgsql"
-	"reflect"
 	"testing"
 	"time"
 
@@ -145,7 +144,7 @@ func (ts *PostgresTestSuite) Test_repositoryWithdraw_WithdrawFromUserBalance() {
 				Balance int `db:"loyality_balance_current"`
 			}
 			getModel := GetBalanceModel{}
-			err= ts.conn.GetContext(ctx, &getModel, query, tt.args.addModel.UserID)
+			err = ts.conn.GetContext(ctx, &getModel, query, tt.args.addModel.UserID)
 			require.NoError(ts.T(), err)
 
 			expectedBalance := tt.args.createUserModel.Balance - tt.args.addModel.Sum
@@ -191,30 +190,67 @@ func (ts *PostgresTestSuite) createUserIfNotExist(ctx context.Context, addModel 
 	return userID, nil
 }
 
-func Test_repositoryWithdraw_GetUserWithdrawals(t *testing.T) {
-	type args struct {
-		ctx    context.Context
-		userID auth.UserID
+func (ts *PostgresTestSuite) Test_repositoryWithdraw_GetUserWithdrawals() {
+	ctx := context.Background()
+
+	addUser := createUser{
+		Login:     "User 1",
+		Password:  "password",
+		Balance:   100,
+		Withdrawn: 0,
 	}
-	tests := []struct {
-		name    string
-		r       *repositoryWithdraw
-		args    args
-		want    []modelWithdraw.GetUserWithdrawModel
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.r.GetUserWithdrawals(tt.args.ctx, tt.args.userID)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("repositoryWithdraw.GetUserWithdrawals() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("repositoryWithdraw.GetUserWithdrawals() = %v, want %v", got, tt.want)
-			}
+	userID, err := ts.createUserIfNotExist(ctx, addUser)
+	require.NoError(ts.T(), err)
+
+	addWithdrawals := []createWithdrawal{}
+	for i := 1; i < 3; i++ {
+		addWithdrawals = append(addWithdrawals, createWithdrawal{
+			OrderID: i,
+			UserID:  userID,
+			Sum:     10,
 		})
 	}
+
+	err = ts.createWithdrawalsIfNotExist(ctx, addWithdrawals)
+	require.NoError(ts.T(), err)
+
+	response, err := ts.repositoryWithdraw.GetUserWithdrawals(ctx, userID)
+	require.NoError(ts.T(), err)
+
+	require.GreaterOrEqual(ts.T(), len(response), 1)
+}
+
+type createWithdrawal struct {
+	OrderID int         `db:"order_id"`
+	UserID  auth.UserID `db:"user_id"`
+	Sum     int         `db:"sum"`
+}
+
+func (ts *PostgresTestSuite) createWithdrawalsIfNotExist(ctx context.Context, addWithdrawals []createWithdrawal) error {
+	query := `
+		SELECT order_id FROM withdrawals
+		WHERE order_id=$1
+	`
+	queryInsertWithdrawal := `INSERT INTO withdrawals (order_id, user_id, sum) VALUES ($1, $2, $3)`
+
+	for _, v := range addWithdrawals {
+		type getWithdrawal struct {
+			OrderID int `db:"order_id"`
+		}
+		getModel := getWithdrawal{}
+		err := ts.conn.GetContext(ctx, &getModel, query, v.OrderID)
+		if err == nil {
+			continue
+		}
+
+		if errors.Is(err, sql.ErrNoRows) {
+			_, err = ts.conn.ExecContext(ctx, queryInsertWithdrawal, v.OrderID, v.UserID, v.Sum)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
 }
