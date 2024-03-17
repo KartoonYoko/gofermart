@@ -1,0 +1,5 @@
+FROM alpine:latest
+WORKDIR /root/
+COPY ./accrual/accrual_linux_amd64 .
+EXPOSE 8080
+CMD ["./accrual_linux_amd64"] 

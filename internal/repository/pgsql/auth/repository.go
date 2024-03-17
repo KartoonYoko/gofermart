@@ -61,7 +61,7 @@ func (r *authRepository) GetUserByLoginAndPassword(ctx context.Context, login st
 	err := r.conn.GetContext(ctx, &user, query, login, password)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, model.ErrUserNotFound
+			return nil, NewErrUserNotFound(login, password, err)
 		}
 		return nil, err
 	}
