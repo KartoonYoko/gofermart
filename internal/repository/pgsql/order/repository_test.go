@@ -75,7 +75,7 @@ func (ts *PostgresTestSuite) TearDownTest() {
 	ts.Require().NoError(ts.clean(context.Background()))
 }
 
-func TestBalanceRepository(t *testing.T) {
+func TestOrderRepository(t *testing.T) {
 	suite.Run(t, new(PostgresTestSuite))
 }
 

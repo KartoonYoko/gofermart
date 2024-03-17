@@ -5,7 +5,6 @@ import (
 	"errors"
 	"gofermart/config"
 	"testing"
-	"time"
 
 	repoAuth "gofermart/internal/repository/pgsql/auth"
 
@@ -25,63 +24,20 @@ import (
 
 	"go.uber.org/mock/gomock"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/testcontainers/testcontainers-go"
-	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
-	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 type HTTPControllerTestSuite struct {
 	suite.Suite
 	HTTPController
-
-	tc *tcpostgres.PostgresContainer
 }
 
 func (ts *HTTPControllerTestSuite) SetupSuite() {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
 
-	pgc, err := tcpostgres.RunContainer(ctx,
-		testcontainers.WithImage("docker.io/postgres:16.2"),
-		tcpostgres.WithDatabase("gophermart"),
-		tcpostgres.WithUsername("postgres"),
-		tcpostgres.WithPassword("123"),
-		tcpostgres.WithInitScripts(),
-		testcontainers.WithWaitStrategy(
-			wait.ForLog("database system is ready to accept connections").
-				WithOccurrence(2).
-				WithStartupTimeout(5*time.Second),
-		),
-	)
-
-	require.NoError(ts.T(), err)
-
-	// cfg.Host, err = pgc.Host(ctx)
-	// require.NoError(ts.T(), err)
-
-	// port, err := pgc.MappedPort(ctx, "5432")
-	// require.NoError(ts.T(), err)
-
-	// cfg.Port = uint16(port.Int())
-
-	ts.tc = pgc
-	// ts.cfg = cfg
-
-	// db, err := New(cfg)
-	// require.NoError(ts.T(), err)
-
-	// ts.testStorager = db
-
-	// ts.T().Logf("stared postgres at %s:%d", cfg.Host, cfg.Port)
 }
 
 func (ts *HTTPControllerTestSuite) TearDownSuite() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 
-	require.NoError(ts.T(), ts.tc.Terminate(ctx))
 }
 
 // func (ts *PostgresTestSuite) SetupTest() {

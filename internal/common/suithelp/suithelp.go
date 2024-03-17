@@ -10,10 +10,16 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-type ContainerData struct {
+type PostgresqlContainerData struct {
 	Port             uint16
 	Host             string
 	ConnectionString string
+}
+
+type AccrualContainerData struct {
+	Port uint16
+	Host string
+	Tc   testcontainers.Container
 }
 
 func NewPostgresContainer(ctx context.Context) (*tcpostgres.PostgresContainer, error) {
@@ -36,7 +42,47 @@ func NewPostgresContainer(ctx context.Context) (*tcpostgres.PostgresContainer, e
 	return pgc, err
 }
 
-func GetPostgresqlContainerData(ctx context.Context, pgc *tcpostgres.PostgresContainer) (*ContainerData, error) {
+func NewAccrualContainer(ctx context.Context) (*AccrualContainerData, error) {
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	// TODO
+
+	req := testcontainers.ContainerRequest{
+		FromDockerfile: testcontainers.FromDockerfile{
+			Context:       "../../../../cmd/accrual/.",
+			Dockerfile:    "../../../../docker/Dockerfile.accrual",
+			PrintBuildLog: true,
+			KeepImage:     false,
+		},
+	}
+
+	gReq := testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	}
+
+	container, err := testcontainers.GenericContainer(ctx, gReq)
+	if err != nil {
+		return nil, err
+	}
+	host, err := container.Host(ctx)
+	if err != nil {
+		return nil, err
+	}
+	port, err := container.MappedPort(ctx, "8080")
+	if err != nil {
+		return nil, err
+	}
+
+	portDigit := uint16(port.Int())
+	return &AccrualContainerData{
+		Host: host,
+		Port: portDigit,
+		Tc:   container,
+	}, err
+}
+
+func GetPostgresqlContainerData(ctx context.Context, pgc *tcpostgres.PostgresContainer) (*PostgresqlContainerData, error) {
 	host, err := pgc.Host(ctx)
 	if err != nil {
 		return nil, err
@@ -47,7 +93,7 @@ func GetPostgresqlContainerData(ctx context.Context, pgc *tcpostgres.PostgresCon
 	}
 	portDigit := uint16(port.Int())
 
-	cd := &ContainerData{
+	cd := &PostgresqlContainerData{
 		Port: portDigit,
 		Host: host,
 		ConnectionString: fmt.Sprintf(
