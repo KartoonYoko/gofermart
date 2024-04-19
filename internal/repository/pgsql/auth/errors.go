@@ -28,15 +28,16 @@ type ErrUserNotFound struct {
 	Err      error
 }
 
-func NewErrUserNotFound(login string, password string, err error) *ErrLoginAlreadyExists {
-	return &ErrLoginAlreadyExists{
+func NewErrUserNotFound(login string, password string, err error) *ErrUserNotFound {
+	return &ErrUserNotFound{
 		Login: login,
+		Password: password,
 		Err:   err,
 	}
 }
 
 func (e *ErrUserNotFound) Error() string {
-	return fmt.Sprintf("login %s already exists: %s", e.Login, e.Err)
+	return fmt.Sprintf("user \"%s\" not found: %s", e.Login, e.Err)
 }
 
 func (e *ErrUserNotFound) Unwrap() error {
