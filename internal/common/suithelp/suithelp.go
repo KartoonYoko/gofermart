@@ -45,7 +45,7 @@ func NewPostgresContainer(ctx context.Context) (*tcpostgres.PostgresContainer, e
 func NewAccrualContainer(ctx context.Context) (*AccrualContainerData, error) {
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	// TODO
+	// TODO не находит dockerfile по указанному пути
 
 	req := testcontainers.ContainerRequest{
 		FromDockerfile: testcontainers.FromDockerfile{
