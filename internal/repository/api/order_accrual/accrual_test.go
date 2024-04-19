@@ -52,7 +52,6 @@ func TestOrderAccrualRepository(t *testing.T) {
 }
 
 func (ts *AccrualTestSuite) Test_orderAccrualAPI_GetOrderAccrual() {
-	return
 	// TODO
 	// type args struct {
 	// 	orderID int64
